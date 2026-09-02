@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Pii",
+    "slug": "pii-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1F3A5F"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pii.app"
+    },
+    "android": {
+      "package": "com.pii.app"
+    }
+  }
+}

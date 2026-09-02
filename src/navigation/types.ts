@@ -1,0 +1,63 @@
+export type RootTabParamList = {
+  Accueil: undefined;
+  Livraison: undefined;
+  Messagerie: undefined;
+  Profil: undefined;
+};
+
+export type RootStackParamList = {
+  Welcome: undefined;
+  Tabs: undefined;
+  Login: undefined;
+  Register: undefined;
+  Annuaire: undefined;
+  MonAffiliation: undefined;
+  VerificationIdentite: undefined;
+  MesCommandes: undefined;
+  InvitationsEquipe: undefined;
+  NouveauMessage: undefined;
+  GererPublications: { espaceId: string };
+  ProfilEspace: { espaceId: string };
+   SelectionTypeDemande: undefined;
+  DemandeDevisCargo: undefined;
+    QuoteRequestDetail: { requestId: string };
+  DemandeDevisTransitaire: undefined;
+  MesDevis: undefined;
+  DevisRecus: { espaceId: string };
+  CreerPublication: { espaceId: string };
+  Commander: {
+    publicationId: string;
+    title: string;
+    price: number;
+    tranchesActivees: boolean;
+  };
+  SelectionnerTypeEspace: undefined;
+  CreerBoutique: undefined;
+  CreerEntrepreneur: undefined;
+  CreerAgenceLivraison: undefined;
+  CreerAgenceCargo: undefined;
+  CreerTransitaire: undefined;
+  BoutiqueDashboard: { espaceId: string };
+  EntrepreneurDashboard: { espaceId: string };
+  AgenceLivraisonDashboard: { espaceId: string };
+  AgenceCargoDashboard: { espaceId: string };
+  TransitaireDashboard: { espaceId: string };
+  SuiviColis: undefined;
+  Conversation: {
+    conversationId: string;
+    contactName: string;
+    contactInitials: string;
+  };
+  Groupes: undefined;
+  CreerGroupe: { espaceId: string };
+  GroupeMessages: {
+    groupId: string;
+    groupName: string;
+    groupType: "discussion" | "annonces";
+    isCreator: boolean;
+  };
+  LiveViewer: undefined;
+  Tontines: undefined;
+CreerTontine: undefined;
+  TontineDetail: { tontineId: string };
+};
