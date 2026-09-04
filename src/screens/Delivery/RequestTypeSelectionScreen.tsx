@@ -8,8 +8,13 @@ import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
 const OPTIONS = [
+  {
+    key: "groupee" as const,
+    icon: "layers-outline" as const,
+    title: "Livraison groupée",
+    subtitle: "Plusieurs commandes de boutiques différentes, une seule livraison",
+  },
   {
     key: "livreur" as const,
     icon: "bicycle-outline" as const,
@@ -33,7 +38,11 @@ const OPTIONS = [
 export function RequestTypeSelectionScreen() {
   const navigation = useNavigation<Nav>();
 
-   function handleSelect(key: "livreur" | "cargo" | "transitaire") {
+    function handleSelect(key: "groupee" | "livreur" | "cargo" | "transitaire") {
+    if (key === "groupee") {
+      navigation.replace("LivraisonGroupee");
+      return;
+    }
     if (key === "livreur") {
       navigation.navigate("Tabs", {
         screen: "Livraison",

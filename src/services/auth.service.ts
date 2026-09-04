@@ -29,3 +29,11 @@ export async function logout() {
   await clearToken();
   await clearUserId();
 }
+
+export async function forgotPassword(channel: "email" | "sms", email?: string, phone?: string) {
+  return api.post<{ sent: boolean }>("/auth/forgot-password", { channel, email, phone }, false);
+}
+
+export async function resetPassword(code: string, newPassword: string, email?: string, phone?: string) {
+  return api.post<{ success: boolean }>("/auth/reset-password", { code, newPassword, email, phone }, false);
+}

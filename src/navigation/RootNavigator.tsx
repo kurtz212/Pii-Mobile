@@ -46,6 +46,9 @@ import { ReceivedQuotesScreen } from "../screens/Quotes/ReceivedQuotesScreen";
 import { RequestQuoteCargoScreen } from "../screens/Delivery/RequestQuoteCargoScreen";
 import { RequestQuoteTransitaireScreen } from "../screens/Delivery/RequestQuoteTransitaireScreen";
 import { QuoteRequestDetailScreen } from "../screens/Quotes/QuoteRequestDetailScreen";
+import { GroupedDeliveryScreen } from "../screens/Delivery/GroupedDeliveryScreen";
+import { ForgotPasswordScreen } from "../screens/Auth/ForgotPasswordScreen";
+import { ResetPasswordScreen } from "../screens/Auth/ResetPasswordScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
@@ -85,6 +88,9 @@ export function RootNavigator() {
         <Stack.Screen name="MonAffiliation" component={MobileMoneyScreen} />
         <Stack.Screen name="MesCommandes" component={MyOrdersScreen} />
         <Stack.Screen name="InvitationsEquipe" component={TeamInvitesScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="LivraisonGroupee" component={GroupedDeliveryScreen} />
                <Stack.Screen name="QuoteRequestDetail" component={QuoteRequestDetailScreen} />
         <Stack.Screen
           name="NouveauMessage"

@@ -75,6 +75,13 @@ export function LoginScreen() {
           <Text style={styles.submitButtonText}>{loading ? "Connexion..." : "Se connecter"}</Text>
         </Pressable>
 
+                <Text
+          style={styles.forgotPasswordLink}
+          onPress={() => navigation.navigate("ForgotPassword")}
+        >
+          Mot de passe oublié ?
+        </Text>
+
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>Pas encore de compte ?</Text>
           <Text style={styles.footerLink} onPress={() => navigation.navigate("Register")}>
@@ -119,6 +126,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   submitButtonDisabled: { backgroundColor: colors.borderStrong },
+    forgotPasswordLink: {
+    fontSize: 13,
+    color: colors.accent,
+    textAlign: "center",
+    marginTop: spacing.md,
+    fontWeight: "600",
+  },
   submitButtonText: { fontSize: 15, fontWeight: "600", color: colors.onAccent },
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: spacing.lg },
   footerText: { fontSize: 13, color: colors.textSecondary },

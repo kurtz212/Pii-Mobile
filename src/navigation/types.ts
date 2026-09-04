@@ -31,6 +31,9 @@ export type RootStackParamList = {
     price: number;
     tranchesActivees: boolean;
   };
+    ForgotPassword: undefined;
+      LivraisonGroupee: undefined;
+  ResetPassword: { email: string };
   SelectionnerTypeEspace: undefined;
   CreerBoutique: undefined;
   CreerEntrepreneur: undefined;

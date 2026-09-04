@@ -8,6 +8,9 @@ export interface ApiDeliveryRequest {
   notes: string | null;
   packageSize: string | null;
   isFragile: boolean;
+  isGrouped: boolean;
+  pickupPoints: ApiPickupPoint[] | null;
+  trackingSteps: ApiTrackingStep[];
   status: "open" | "assigned" | "completed" | "cancelled";
   acceptedOfferId: string | null;
   assignedLivreurId: string | null;
@@ -71,4 +74,33 @@ export async function acceptOffer(requestId: string, offerId: string) {
 
 export async function getDeliveryContact(requestId: string) {
   return api.get<ApiContactInfo>(`/delivery-requests/${requestId}/contact`, true);
+}
+export interface ApiPickupPoint {
+  espaceId: string;
+  espaceName: string;
+  location: string | null;
+  orderId: string;
+  title: string;
+}
+
+interface CreateGroupedDeliveryPayload {
+  orderIds: string[];
+  destination: string;
+  notes?: string;
+  packageSize?: string;
+  isFragile?: boolean;
+}
+
+export async function createGroupedDelivery(payload: CreateGroupedDeliveryPayload) {
+  return api.post<ApiDeliveryRequest>("/delivery-requests/grouped", payload, true);
+}
+
+export interface ApiTrackingStep {
+  step: "picked_up" | "in_transit" | "delivered";
+  note: string | null;
+  at: string;
+}
+
+export async function addTrackingStep(requestId: string, step: string, note?: string) {
+  return api.post<ApiDeliveryRequest>(`/delivery-requests/${requestId}/tracking`, { step, note }, true);
 }

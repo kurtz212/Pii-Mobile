@@ -1,13 +1,18 @@
-import { api } from "./api";
+﻿import { api } from "./api";
 
 export type TontineStatus = "draft" | "active" | "completed" | "cancelled";
 export type ContributionStatus = "pending" | "paid" | "missed";
+export type ResponseStatus = "pending" | "validated" | "amended";
 
 export interface ApiTontine {
   id: string;
   creatorId: string;
   name: string;
   description: string | null;
+  articleName: string | null;
+  articlePrice: string | null;
+  articleImageUrl: string | null;
+  confidentialityPolicy: string | null;
   contributionAmount: string;
   maxParticipants: number;
   status: TontineStatus;
@@ -20,6 +25,8 @@ export interface ApiTontineParticipant {
   userId: string;
   user: { id: string; fullName: string; phone: string };
   proposedOrder: number | null;
+  requestedOrder: number | null;
+  responseStatus: ResponseStatus;
   confirmedOrder: number | null;
   joinedAt: string;
 }
@@ -37,6 +44,10 @@ export interface ApiTontineContribution {
 interface CreateTontinePayload {
   name: string;
   description?: string;
+  articleName?: string;
+  articlePrice?: number;
+  articleImageUrl?: string;
+  confidentialityPolicy?: string;
   contributionAmount: number;
   maxParticipants: number;
 }
@@ -61,12 +72,16 @@ export async function joinTontine(id: string) {
   return api.post<{ joined: boolean }>(`/tontines/${id}/join`, undefined, true);
 }
 
-export async function proposeOrder(id: string, proposedOrder: number) {
-  return api.patch<ApiTontineParticipant>(`/tontines/${id}/my-order`, { proposedOrder }, true);
+export async function proposeCalendar(id: string, assignments: { userId: string; order: number }[]) {
+  return api.post<ApiTontineParticipant[]>(`/tontines/${id}/propose-calendar`, { assignments }, true);
 }
 
-export async function validateCalendar(id: string, orderedUserIds: string[]) {
-  return api.post<ApiTontine>(`/tontines/${id}/validate`, { orderedUserIds }, true);
+export async function respondToProposal(id: string, accept: boolean, requestedOrder?: number) {
+  return api.post<ApiTontineParticipant>(`/tontines/${id}/respond`, { accept, requestedOrder }, true);
+}
+
+export async function finalizeCalendar(id: string) {
+  return api.post<ApiTontine>(`/tontines/${id}/finalize`, undefined, true);
 }
 
 export async function getContributions(id: string, round?: number) {

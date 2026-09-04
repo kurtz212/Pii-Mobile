@@ -5,7 +5,7 @@
 // car il pointerait vers le téléphone lui-même, pas vers le PC qui fait
 // tourner le backend. Il faut l'adresse IP locale du PC sur le réseau
 // Wi-Fi (trouvée avec `ipconfig` sous "Adresse IPv4").
-const API_BASE_URL = "http://192.168.11.110:3000";
+const API_BASE_URL = "http://192.168.11.112:3000";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

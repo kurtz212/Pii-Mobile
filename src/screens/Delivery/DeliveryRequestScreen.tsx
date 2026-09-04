@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
+import { TrackingTimeline } from "./TrackingTimeline";
 import { RootStackParamList } from "@/navigation/types";
 import {
   ApiContactInfo,
@@ -324,6 +325,8 @@ function EnvoyerView({ forceOpenForm }: { forceOpenForm?: boolean }) {
               <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
               <Text style={styles.assignedText}>Livraison confirmee avec un livreur.</Text>
             </View>
+                       <TrackingTimeline steps={selectedRequest.trackingSteps ?? []} />
+                        <TrackingTimeline steps={selectedRequest.trackingSteps ?? []} />
             {contact && (
               <View style={styles.contactCard}>
                 <Ionicons name="person-circle-outline" size={22} color={colors.accent} />
@@ -693,11 +696,14 @@ function MesLivraisonsView() {
                 {item.isFragile ? " - Fragile" : ""}
               </Text>
             )}
-            <View style={styles.statusRow}>
+                        <View style={styles.statusRow}>
               <Text style={styles.statusText}>
-                {item.status === "assigned" ? "En cours" : item.status === "completed" ? "Terminee" : item.status}
+                {item.status === "assigned" ? "En cours" : item.status === "completed" ? "Terminée" : item.status}
               </Text>
             </View>
+            {item.status === "assigned" && (
+              <TrackingUpdateButtons request={item} onUpdated={load} />
+            )}
             {contacts[item.id] && (
               <View style={styles.contactCard}>
                 <Ionicons name="person-circle-outline" size={20} color={colors.accent} />
@@ -943,4 +949,58 @@ const styles = StyleSheet.create({
   pickupLabel: { fontSize: 11, color: colors.textMuted, fontWeight: "600" },
   statusRow: { marginTop: spacing.sm },
   statusText: { fontSize: 11, color: colors.accent, fontWeight: "600" },
+   trackingButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 8,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  trackingButtonText: { fontSize: 12, fontWeight: "600", color: colors.onAccent }, 
 });
+function TrackingUpdateButtons({
+  request,
+  onUpdated,
+}: {
+  request: ApiDeliveryRequest;
+  onUpdated: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const steps = request.trackingSteps ?? [];
+  const doneSteps = new Set(steps.map((s) => s.step));
+
+  const nextStep = !doneSteps.has("picked_up")
+    ? "picked_up"
+    : !doneSteps.has("in_transit")
+      ? "in_transit"
+      : !doneSteps.has("delivered")
+        ? "delivered"
+        : null;
+
+  const nextLabel: Record<string, string> = {
+    picked_up: "Marquer comme récupéré",
+    in_transit: "Marquer en route",
+    delivered: "Marquer comme livré",
+  };
+
+  if (!nextStep) return null;
+
+  async function handlePress() {
+    setBusy(true);
+    try {
+      const { addTrackingStep } = await import("../../services/delivery.service");
+      await addTrackingStep(request.id, nextStep!);
+      onUpdated();
+    } catch {
+      // en cas d'échec, l'utilisateur peut réessayer
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Pressable style={styles.trackingButton} onPress={handlePress} disabled={busy}>
+      <Text style={styles.trackingButtonText}>{busy ? "..." : nextLabel[nextStep]}</Text>
+    </Pressable>
+  );
+}
