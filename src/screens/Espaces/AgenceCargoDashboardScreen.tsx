@@ -10,7 +10,7 @@ import { EspaceResponse, getEspaceById } from "../../services/espaces.service";
 import { ApiGroup, getGroupsByEspace, joinGroup } from "../../services/group.service";
 import { ApiQuoteRequest, getReceivedQuoteRequests, submitQuote } from "../../services/quote.service";
 import { ApiRequestError } from "../../services/api";
-
+import { QuoteTrackingTimeline } from "../Quotes/QuoteTrackingTimeline";
 type Props = NativeStackScreenProps<RootStackParamList, "AgenceCargoDashboard">;
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -24,6 +24,7 @@ export function AgenceCargoDashboardScreen() {
   const [receivedRequests, setReceivedRequests] = useState<ApiQuoteRequest[]>([]);
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [trackingBusy, setTrackingBusy] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +39,7 @@ export function AgenceCargoDashboardScreen() {
       ]);
       setEspace(espaceData);
       setGroups(groupsData);
-      setReceivedRequests(requestsData.filter((r) => r.status === "open"));
+         setReceivedRequests(requestsData.filter((r) => r.status === "open" || r.status === "accepted"));
     } catch (err: unknown) {
       setError(err instanceof ApiRequestError ? err.message : "Erreur de chargement");
     } finally {
@@ -70,6 +71,7 @@ export function AgenceCargoDashboardScreen() {
     const priceStr = priceDrafts[requestId];
     const price = Number(priceStr);
     if (!priceStr || isNaN(price) || price <= 0) return;
+
     setSubmittingId(requestId);
     try {
       await submitQuote(requestId, espaceId, price);
@@ -79,6 +81,22 @@ export function AgenceCargoDashboardScreen() {
       // en cas d'échec, la liste reste inchangée
     } finally {
       setSubmittingId(null);
+    }
+  }
+
+  async function handleTrackingStep(
+    requestId: string,
+    nextStep: "picked_up" | "in_transit" | "customs" | "delivered",
+  ) {
+    setTrackingBusy(requestId);
+    try {
+      const { addQuoteTrackingStep } = await import("../../services/quote.service");
+      await addQuoteTrackingStep(requestId, nextStep);
+      await load();
+    } catch {
+      // en cas d'échec, l'utilisateur peut réessayer
+    } finally {
+      setTrackingBusy(null);
     }
   }
 
@@ -169,6 +187,21 @@ export function AgenceCargoDashboardScreen() {
               weightKg?: number;
               merchandiseDescription?: string;
             };
+            const stepsOrder: Array<"picked_up" | "in_transit" | "customs" | "delivered"> = [
+              "picked_up",
+              "in_transit",
+              "customs",
+              "delivered",
+            ];
+            const doneSteps = new Set((req.trackingSteps ?? []).map((s) => s.step));
+            const nextStep = stepsOrder.find((s) => !doneSteps.has(s));
+            const nextLabel: Record<"picked_up" | "in_transit" | "customs" | "delivered", string> = {
+              picked_up: "Marquer comme récupéré",
+              in_transit: "Marquer en transit",
+              customs: "Marquer en dédouanement",
+              delivered: "Marquer comme livré",
+            };
+
             return (
               <View key={req.id} style={styles.quoteRequestCard}>
                 <Text style={styles.quoteRequestRoute}>
@@ -177,25 +210,45 @@ export function AgenceCargoDashboardScreen() {
                 <Text style={styles.quoteRequestDetail}>
                   {d.weightKg} kg · {d.merchandiseDescription}
                 </Text>
-                <View style={styles.offerInputRow}>
-                  <TextInput
-                    style={styles.priceInput}
-                    placeholder="Prix (F)"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    value={priceDrafts[req.id] ?? ""}
-                    onChangeText={(text) => setPriceDrafts((prev) => ({ ...prev, [req.id]: text }))}
-                  />
-                  <Pressable
-                    style={styles.proposeButton}
-                    onPress={() => handleSubmitQuote(req.id)}
-                    disabled={submittingId === req.id}
-                  >
-                    <Text style={styles.proposeButtonText}>
-                      {submittingId === req.id ? "..." : "Répondre"}
-                    </Text>
-                  </Pressable>
-                </View>
+
+                {req.status === "open" && (
+                  <View style={styles.offerInputRow}>
+                    <TextInput
+                      style={styles.priceInput}
+                      placeholder="Prix (F)"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="numeric"
+                      value={priceDrafts[req.id] ?? ""}
+                      onChangeText={(text) => setPriceDrafts((prev) => ({ ...prev, [req.id]: text }))}
+                    />
+                    <Pressable
+                      style={styles.proposeButton}
+                      onPress={() => handleSubmitQuote(req.id)}
+                      disabled={submittingId === req.id}
+                    >
+                      <Text style={styles.proposeButtonText}>
+                        {submittingId === req.id ? "..." : "Répondre"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+
+                {req.status === "accepted" && (
+                  <>
+                    <QuoteTrackingTimeline steps={req.trackingSteps ?? []} />
+                    {nextStep && (
+                      <Pressable
+                        style={styles.proposeButton}
+                        onPress={() => handleTrackingStep(req.id, nextStep)}
+                        disabled={trackingBusy === req.id}
+                      >
+                        <Text style={styles.proposeButtonText}>
+                          {trackingBusy === req.id ? "..." : nextLabel[nextStep]}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </>
+                )}
               </View>
             );
           })

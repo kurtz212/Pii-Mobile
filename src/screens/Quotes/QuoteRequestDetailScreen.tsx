@@ -6,6 +6,7 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
+import { QuoteTrackingTimeline } from "./QuoteTrackingTimeline";
 import {
   ApiQuote,
   ApiQuoteContactInfo,
@@ -113,7 +114,11 @@ export function QuoteRequestDetailScreen() {
           </Text>
         </View>
       )}
+        {request.status === "accepted" && (
+          <QuoteTrackingTimeline steps={request.trackingSteps ?? []} />
+        )}
 
+        <View style={styles.contactCard}></View>
       {contact && (
         <View style={styles.contactCard}>
           <Ionicons name="person-circle-outline" size={22} color={colors.accent} />

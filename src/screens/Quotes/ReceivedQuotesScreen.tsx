@@ -17,6 +17,7 @@ import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import {
   ApiQuoteRequest,
+  ApiQuoteTrackingStep,
   completeQuoteRequest,
   getReceivedQuoteRequests,
   submitQuote,
@@ -27,18 +28,16 @@ type Props = NativeStackScreenProps<RootStackParamList, "DevisRecus">;
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const statusLabel: Record<string, string> = {
-  pending: "En attente de ta réponse",
-  quoted: "Devis envoyé",
+  open: "En attente de ta réponse",
   accepted: "Accepté par le client",
-  rejected: "Refusé par le client",
+  cancelled: "Annulé par le client",
   completed: "Terminé",
 };
 
 const statusColor: Record<string, { bg: string; fg: string }> = {
-  pending: { bg: colors.secondaryBg, fg: colors.secondary },
-  quoted: { bg: colors.accentBg, fg: colors.accent },
+  open: { bg: colors.secondaryBg, fg: colors.secondary },
   accepted: { bg: colors.accentBg, fg: colors.accent },
-  rejected: { bg: colors.dangerBg, fg: colors.danger },
+  cancelled: { bg: colors.dangerBg, fg: colors.danger },
   completed: { bg: colors.surface, fg: colors.textSecondary },
 };
 
@@ -87,7 +86,7 @@ export function ReceivedQuotesScreen() {
     if (!priceNumber || priceNumber <= 0) return;
     setSubmitting(true);
     try {
-      await submitQuote(quoteModalRequest.id, priceNumber, notes.trim() || undefined);
+      await submitQuote(quoteModalRequest.id, espaceId, priceNumber, notes.trim() || undefined);
       setQuoteModalRequest(null);
       await load();
     } catch {
@@ -137,33 +136,34 @@ export function ReceivedQuotesScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const colorSet = statusColor[item.status];
+            const colorSet = statusColor[item.status] ?? statusColor.open;
+            const details = item.details;
+            const originCountry = String(details.originCountry ?? "Pays non précisé");
+            const description = String(details.merchandiseDescription ?? "Description non précisée");
             return (
               <View style={styles.card}>
                 <View style={styles.cardTop}>
-                  <Text style={styles.cardCountry}>Pays d'achat : {item.countryOfPurchase}</Text>
+                  <Text style={styles.cardCountry}>Pays d'achat : {originCountry}</Text>
                   <View style={[styles.statusBadge, { backgroundColor: colorSet.bg }]}>
                     <Text style={[styles.statusBadgeText, { color: colorSet.fg }]}>
                       {statusLabel[item.status]}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.cardDescription}>{item.description}</Text>
+                <Text style={styles.cardDescription}>{description}</Text>
 
-                {item.status === "pending" && (
+                {item.status === "open" && (
                   <Pressable style={styles.actionButton} onPress={() => openQuoteModal(item)}>
                     <Text style={styles.actionButtonText}>Proposer un prix</Text>
                   </Pressable>
                 )}
-                {item.status === "quoted" && (
-                  <Pressable style={styles.actionButtonSecondary} onPress={() => openQuoteModal(item)}>
-                    <Text style={styles.actionButtonSecondaryText}>Modifier le devis</Text>
-                  </Pressable>
-                )}
                 {item.status === "accepted" && (
-                  <Pressable style={styles.actionButton} onPress={() => handleComplete(item.id)}>
-                    <Text style={styles.actionButtonText}>Marquer comme terminé</Text>
-                  </Pressable>
+                  <>
+                    <QuoteTrackingButtons request={item} onUpdated={load} />
+                    <Pressable style={styles.actionButton} onPress={() => handleComplete(item.id)}>
+                      <Text style={styles.actionButtonText}>Marquer comme terminé</Text>
+                    </Pressable>
+                  </>
                 )}
               </View>
             );
@@ -205,7 +205,48 @@ export function ReceivedQuotesScreen() {
     </SafeAreaView>
   );
 }
+function QuoteTrackingButtons({
+  request,
+  onUpdated,
+}: {
+  request: ApiQuoteRequest;
+  onUpdated: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const steps = request.trackingSteps ?? [];
+  const doneSteps = new Set(steps.map((s) => s.step));
 
+  const order: Array<ApiQuoteTrackingStep["step"]> = ["picked_up", "in_transit", "customs", "delivered"];
+  const nextStep = order.find((s) => !doneSteps.has(s));
+
+  const nextLabel: Record<string, string> = {
+    picked_up: "Marquer comme récupéré",
+    in_transit: "Marquer en transit",
+    customs: "Marquer en dédouanement",
+    delivered: "Marquer comme livré",
+  };
+
+  if (!nextStep) return null;
+
+  async function handlePress() {
+    setBusy(true);
+    try {
+      const { addQuoteTrackingStep } = await import("../../services/quote.service");
+      await addQuoteTrackingStep(request.id, nextStep!);
+      onUpdated();
+    } catch {
+      // en cas d'échec, l'utilisateur peut réessayer
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Pressable style={styles.trackingButton} onPress={handlePress} disabled={busy}>
+      <Text style={styles.trackingButtonText}>{busy ? "..." : nextLabel[nextStep]}</Text>
+    </Pressable>
+  );
+}
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   headerRow: {
@@ -248,6 +289,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.sm,
   },
+    trackingButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 9,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  trackingButtonText: { fontSize: 12, fontWeight: "600", color: colors.onAccent },
   actionButtonSecondaryText: { fontSize: 12, fontWeight: "600", color: colors.accent },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center", padding: spacing.lg },
   modalBox: { width: "100%", backgroundColor: colors.background, borderRadius: radius.md, padding: spacing.lg },
@@ -270,3 +319,4 @@ const styles = StyleSheet.create({
   modalSubmitButton: { flex: 1, backgroundColor: colors.accent, borderRadius: radius.sm, paddingVertical: 10, alignItems: "center" },
   modalSubmitText: { fontSize: 13, fontWeight: "600", color: colors.onAccent },
 });
+

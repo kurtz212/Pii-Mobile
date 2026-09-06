@@ -148,6 +148,8 @@ function LocationField({
 function EnvoyerView({ forceOpenForm }: { forceOpenForm?: boolean }) {
   const navigation = useNavigation<Nav>();
   const [depart, setDepart] = useState("");
+  const [packageSize, setPackageSize] = useState<string | null>(null);
+  const [isFragile, setIsFragile] = useState(false);
   const [destination, setDestination] = useState("");
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -208,7 +210,7 @@ function EnvoyerView({ forceOpenForm }: { forceOpenForm?: boolean }) {
     setCreating(true);
     setError(null);
     try {
-      await createDeliveryRequest(depart.trim(), destination.trim());
+        await createDeliveryRequest(depart.trim(), destination.trim(), undefined, packageSize ?? undefined, isFragile);
       setDepart("");
       setDestination("");
       setShowForm(false);
@@ -281,8 +283,33 @@ function EnvoyerView({ forceOpenForm }: { forceOpenForm?: boolean }) {
           />
           <Text style={styles.formHeaderTitle}>Nouvelle demande</Text>
         </View>
-        <LocationField label="Depart" value={depart} onChangeText={setDepart} />
-        <LocationField label="Destination" value={destination} onChangeText={setDestination} />
+               <LocationField label="Depart" value={depart} onChangeText={setDepart} />
+        <LocationField label="Destination" value={destination} onChangeText={setDestination}/>
+
+        <Text style={styles.label}>Taille du colis</Text>
+        <View style={styles.sizeRow}>
+          {["petit", "moyen", "grand"].map((size) => (
+            <Pressable
+              key={size}
+              style={[styles.sizeChip, packageSize === size && styles.sizeChipActive]}
+              onPress={() => setPackageSize(size)}
+            >
+              <Text style={[styles.sizeChipText, packageSize === size && styles.sizeChipTextActive]}>
+                {size.charAt(0).toUpperCase() + size.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Pressable style={styles.fragileRow} onPress={() => setIsFragile(!isFragile)}>
+          <Ionicons
+            name={isFragile ? "checkbox" : "square-outline"}
+            size={20}
+            color={isFragile ? colors.accent : colors.textMuted}
+          />
+          <Text style={styles.fragileText}>Colis fragile</Text>
+        </Pressable>
+
         {error && <Text style={styles.errorText}>{error}</Text>}
         <Pressable
           style={[
@@ -736,6 +763,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
+    sizeRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
+  sizeChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+  },
+  sizeChipActive: { backgroundColor: colors.accent },
+  sizeChipText: { fontSize: 12, color: colors.textSecondary, fontWeight: "600" },
+  sizeChipTextActive: { color: colors.onAccent },
+  fragileRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.md },
+  fragileText: { fontSize: 13, color: colors.textPrimary },
   headerTitle: { fontSize: 18, fontWeight: "700", color: colors.textPrimary },
   toggleRow: {
     flexDirection: "row",

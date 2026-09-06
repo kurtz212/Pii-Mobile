@@ -2,13 +2,28 @@ import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { ApiPublication, getFeed } from "../../services/publication.service";
 import { ApiRequestError, getImageUrl } from "../../services/api";
+
+function PublicationVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+  });
+
+  return (
+    <VideoView
+      player={player}
+      style={styles.mediaBox}
+      contentFit="cover"
+      nativeControls
+    />
+  );
+}
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -85,11 +100,17 @@ export function HomeScreen() {
       <View style={styles.headerRow}>
         <Text style={styles.logo}>Pii</Text>
         <View style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
-          <Ionicons
+                   <Ionicons
             name="grid-outline"
             size={20}
             color={colors.textSecondary}
             onPress={() => navigation.navigate("Annuaire")}
+          />
+          <Ionicons
+            name="radio-outline"
+            size={22}
+            color={colors.textSecondary}
+            onPress={() => navigation.navigate("LiveViewer")}
           />
           <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
         </View>
@@ -177,13 +198,7 @@ export function HomeScreen() {
                 )}
 
                 {item.contentType === "video" && fullVideoUrl && (
-                  <Video
-                    source={{ uri: fullVideoUrl }}
-                    style={styles.mediaBox}
-                    resizeMode={ResizeMode.COVER}
-                    useNativeControls
-                    isLooping
-                  />
+                                   <PublicationVideo uri={fullVideoUrl} />
                 )}
 
                 {item.contentType === "text" && (

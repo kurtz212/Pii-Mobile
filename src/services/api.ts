@@ -5,7 +5,7 @@
 // car il pointerait vers le téléphone lui-même, pas vers le PC qui fait
 // tourner le backend. Il faut l'adresse IP locale du PC sur le réseau
 // Wi-Fi (trouvée avec `ipconfig` sous "Adresse IPv4").
-const API_BASE_URL = "http://192.168.11.112:3000";
+const API_BASE_URL = "http://192.168.11.101:3000";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -99,28 +99,27 @@ export function getImageUrl(path: string | null | undefined): string | null {
 
 export async function uploadImage(localUri: string): Promise<string> {
   const token = await getToken();
-  const formData = new FormData();
   const filename = localUri.split("/").pop() ?? "photo.jpg";
   const match = /\.(\w+)$/.exec(filename);
   const type = match ? `image/${match[1] === "jpg" ? "jpeg" : match[1]}` : "image/jpeg";
 
-  formData.append("file", {
-    uri: localUri,
-    name: filename,
-    type,
-  } as any);
+  // Contourne un bug de compatibilité entre React Native récent et
+  // l'ancienne syntaxe FormData ({uri, name, type}) — on récupère le
+  // fichier local comme un vrai Blob avant de l'attacher.
+  const fileResponse = await fetch(localUri);
+  const rawBlob = await fileResponse.blob();
+  const blob = rawBlob.type === type ? rawBlob : new Blob([rawBlob], { type });
+
+  const formData = new FormData();
+  formData.append("file", blob, filename);
 
   const response = await fetch(`${API_BASE_URL}/uploads/image`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      // Ne jamais fixer Content-Type manuellement ici — fetch calcule
-      // automatiquement la bonne valeur (avec la boundary multipart)
-      // à partir de l'objet FormData.
     },
-    body: formData as any,
+    body: formData,
   });
-
   const data = await response.json();
   if (!response.ok) {
     throw new ApiRequestError(data?.message ?? "Échec de l'envoi de l'image", response.status);
@@ -130,25 +129,24 @@ export async function uploadImage(localUri: string): Promise<string> {
 
 export async function uploadVideo(localUri: string): Promise<string> {
   const token = await getToken();
-  const formData = new FormData();
   const filename = localUri.split("/").pop() ?? "video.mp4";
   const match = /\.(\w+)$/.exec(filename);
   const type = match ? `video/${match[1] === "mov" ? "quicktime" : match[1]}` : "video/mp4";
 
-  formData.append("file", {
-    uri: localUri,
-    name: filename,
-    type,
-  } as any);
+    const fileResponse = await fetch(localUri);
+  const rawBlob = await fileResponse.blob();
+  const blob = rawBlob.type === type ? rawBlob : new Blob([rawBlob], { type });
+
+  const formData = new FormData();
+  formData.append("file", blob, filename);
 
   const response = await fetch(`${API_BASE_URL}/uploads/video`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData as any,
+    body: formData,
   });
-
   const data = await response.json();
   if (!response.ok) {
     throw new ApiRequestError(data?.message ?? "Échec de l'envoi de la vidéo", response.status);

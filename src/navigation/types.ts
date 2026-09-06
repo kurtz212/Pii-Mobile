@@ -33,6 +33,7 @@ export type RootStackParamList = {
   };
     ForgotPassword: undefined;
       LivraisonGroupee: undefined;
+      ModifierEspace: { espaceId: string };  
   ResetPassword: { email: string };
   SelectionnerTypeEspace: undefined;
   CreerBoutique: undefined;

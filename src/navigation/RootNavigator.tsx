@@ -49,6 +49,7 @@ import { QuoteRequestDetailScreen } from "../screens/Quotes/QuoteRequestDetailSc
 import { GroupedDeliveryScreen } from "../screens/Delivery/GroupedDeliveryScreen";
 import { ForgotPasswordScreen } from "../screens/Auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "../screens/Auth/ResetPasswordScreen";
+import { EditEspaceScreen } from "../screens/Espaces/EditEspaceScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
@@ -91,6 +92,7 @@ export function RootNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="LivraisonGroupee" component={GroupedDeliveryScreen} />
+                <Stack.Screen name="ModifierEspace" component={EditEspaceScreen} />
                <Stack.Screen name="QuoteRequestDetail" component={QuoteRequestDetailScreen} />
         <Stack.Screen
           name="NouveauMessage"

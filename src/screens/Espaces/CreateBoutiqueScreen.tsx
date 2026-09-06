@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
+import * as ImagePicker from "expo-image-picker";
 import { createEspace } from "../../services/espaces.service";
-import { ApiRequestError } from "../../services/api";
+import { ApiRequestError, uploadImage } from "../../services/api";
 import { getMyAffiliation } from "../../services/affiliation.service";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +18,8 @@ const CATEGORIES = ["Mode", "Électronique", "Alimentation", "Beauté", "Maison"
 export function CreateBoutiqueScreen() {
   const navigation = useNavigation<Nav>();
   const [name, setName] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -54,17 +57,40 @@ export function CreateBoutiqueScreen() {
     location.trim().length > 0 &&
     affiliationCode.trim().length > 0 &&
     !loading;
-
+  async function handlePickPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError("Autorise l'accès à ta galerie pour continuer.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
   async function handleCreate() {
     if (!canSubmit) return;
     setError(null);
     setLoading(true);
     try {
+      let uploadedPhotoUrl: string | undefined;
+      if (photoUri) {
+        setUploadingPhoto(true);
+        uploadedPhotoUrl = await uploadImage(photoUri);
+        setUploadingPhoto(false);
+      }
+
       await createEspace({
         type: "boutique" as any,
         name: name.trim(),
         description: description.trim() || undefined,
         location: location.trim(),
+        photoUrl: uploadedPhotoUrl,
         details: { category },
         affiliationCode: affiliationCode.trim(),
       } as any);
@@ -73,6 +99,7 @@ export function CreateBoutiqueScreen() {
       setError(err instanceof ApiRequestError ? err.message : "Impossible de se connecter au serveur. Vérifie ta connexion.");
     } finally {
       setLoading(false);
+      setUploadingPhoto(false);
     }
   }
 
@@ -83,12 +110,18 @@ export function CreateBoutiqueScreen() {
         <Text style={styles.headerTitle}>Nouvelle boutique</Text>
         <View style={{ width: 20 }} />
       </View>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.logoBox}>
-          <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
-          <Text style={styles.logoText}>Ajouter un logo</Text>
-        </View>
+           <ScrollView contentContainerStyle={styles.content}>
+        <Pressable style={styles.logoBox} onPress={handlePickPhoto}>
+          
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.logoImage} />
+          ) : (
+            <>
+              <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
+              <Text style={styles.logoText}>Ajouter un logo</Text>
+            </>
+          )}
+        </Pressable>
 
         <Text style={styles.label}>Nom de la boutique</Text>
         <TextInput
@@ -176,7 +209,9 @@ export function CreateBoutiqueScreen() {
           onPress={handleCreate}
           disabled={!canSubmit}
         >
-          <Text style={styles.submitButtonText}>{loading ? "Création..." : "Créer ma boutique"}</Text>
+                  <Text style={styles.submitButtonText}>
+            {uploadingPhoto ? "Envoi de la photo..." : loading ? "Création..." : "Créer ma boutique"}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -195,6 +230,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
   logoBox: {
+    
     width: 88,
     height: 88,
     borderRadius: 44,
@@ -208,6 +244,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: spacing.lg,
   },
+    logoImage: { width: "100%", height: "100%", borderRadius: 44 },
   logoText: { fontSize: 10, color: colors.textSecondary, textAlign: "center", width: 70 },
   label: { fontSize: 12, color: colors.textSecondary, marginBottom: 6 },
   input: {

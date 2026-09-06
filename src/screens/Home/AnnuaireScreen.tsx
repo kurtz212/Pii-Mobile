@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { EspaceResponse, getEspacesPublic } from "../../services/espaces.service";
-import { ApiRequestError, getUserId } from "../../services/api";
+import { ApiRequestError, getImageUrl, getUserId } from "../../services/api";
 import { initialsFromName, startConversation } from "../../services/messaging.service";
 import { ApiBadgeInfo, getBadgeInfo } from "../../services/badge.service";
 
@@ -139,9 +139,16 @@ export function AnnuaireScreen() {
               <View style={styles.card}>
                 <Pressable
                   onPress={() => navigation.navigate("ProfilEspace", { espaceId: item.id })}
-                >
+                    >
                   <View style={styles.cardTop}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                      {item.photoUrl ? (
+                        <Image source={{ uri: getImageUrl(item.photoUrl) ?? undefined }} style={styles.cardAvatar} />
+                      ) : (
+                        <View style={styles.cardAvatarPlaceholder}>
+                          <Ionicons name="storefront-outline" size={14} color={colors.accent} />
+                        </View>
+                      )}
                       <Text style={styles.cardName}>{item.name}</Text>
                       {badge?.level && (
                         <Ionicons
@@ -251,6 +258,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surface,
+  },
+  cardAvatarPlaceholder: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.accentBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardName: { fontSize: 14, fontWeight: "600", color: colors.textPrimary },
   badgeActive: { backgroundColor: colors.accentBg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   badgeActiveText: { fontSize: 10, fontWeight: "600", color: colors.accent },

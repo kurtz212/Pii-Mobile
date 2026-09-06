@@ -2,15 +2,29 @@ import React, { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
+
 import { createPublication, PublicationContentType } from "../../services/publication.service";
 import { ApiRequestError, uploadImage, uploadVideo } from "../../services/api";
+function VideoPreview({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+  });
 
+  return (
+    <VideoView
+      player={player}
+      style={styles.mediaPreview}
+      contentFit="cover"
+      nativeControls
+    />
+  );
+}
 type Props = NativeStackScreenProps<RootStackParamList, "CreerPublication">;
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -132,13 +146,7 @@ export function CreatePublicationScreen() {
               contentType === "image" ? (
                 <Image source={{ uri: mediaUri }} style={styles.mediaPreview} />
               ) : (
-                <Video
-                  source={{ uri: mediaUri }}
-                  style={styles.mediaPreview}
-                  resizeMode={ResizeMode.COVER}
-                  useNativeControls
-                  isLooping
-                />
+                             <VideoPreview uri={mediaUri} />
               )
             ) : (
               <>

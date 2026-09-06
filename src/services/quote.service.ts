@@ -10,7 +10,8 @@ export interface ApiQuoteRequest {
   targetEspaceIds: string[] | null;
   details: Record<string, unknown>;
   status: QuoteRequestStatus;
-  acceptedQuoteId: string | null;
+   acceptedQuoteId: string | null;
+  trackingSteps: ApiQuoteTrackingStep[];
   createdAt: string;
   updatedAt: string;
 }
@@ -76,4 +77,17 @@ export async function completeQuoteRequest(requestId: string) {
 
 export async function getQuoteContact(requestId: string) {
   return api.get<ApiQuoteContactInfo>(`/quote-requests/${requestId}/contact`, true);
+}
+export interface ApiQuoteTrackingStep {
+  step: "picked_up" | "in_transit" | "customs" | "delivered";
+  note: string | null;
+  at: string;
+}
+
+export async function addQuoteTrackingStep(
+  requestId: string,
+  step: ApiQuoteTrackingStep["step"],
+  note?: string,
+) {
+  return api.post<ApiQuoteRequest>(`/quote-requests/${requestId}/tracking`, { step, note }, true);
 }

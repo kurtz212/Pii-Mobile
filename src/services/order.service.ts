@@ -12,6 +12,7 @@ export interface ApiOrder {
   sellerId: string;
   title: string;
   price: string;
+  quantity: number;
   paymentMethod: PaymentMethod;
   receptionMode: ReceptionMode;
   notes: string | null;
@@ -19,9 +20,9 @@ export interface ApiOrder {
   createdAt: string;
   updatedAt: string;
 }
-
 interface CreateOrderPayload {
   publicationId: string;
+  quantity?: number;
   paymentMethod: PaymentMethod;
   receptionMode: ReceptionMode;
   notes?: string;

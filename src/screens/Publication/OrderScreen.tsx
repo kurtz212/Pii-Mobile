@@ -17,6 +17,7 @@ export function OrderScreen() {
   const route = useRoute<Props["route"]>();
   const { publicationId, title, price, tranchesActivees } = route.params;
 
+   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [receptionMode, setReceptionMode] = useState<ReceptionMode>("livraison");
   const [notes, setNotes] = useState("");
@@ -28,8 +29,9 @@ export function OrderScreen() {
     setError(null);
     setLoading(true);
     try {
-      await createOrder({
+          await createOrder({
         publicationId,
+        quantity,
         paymentMethod,
         receptionMode,
         notes: notes.trim() || undefined,
@@ -70,9 +72,27 @@ export function OrderScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.summaryCard}>
+              <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>{title}</Text>
-          <Text style={styles.summaryPrice}>{price.toLocaleString("fr-FR")} F</Text>
+          <Text style={styles.summaryPrice}>{(price * quantity).toLocaleString("fr-FR")} F</Text>
+          {quantity > 1 && (
+            <Text style={styles.summaryUnitPrice}>{price.toLocaleString("fr-FR")} F × {quantity}</Text>
+          )}
+        </View>
+
+        <Text style={styles.sectionTitle}>Quantité</Text>
+        <View style={styles.quantityRow}>
+          <Pressable
+            style={styles.quantityButton}
+            onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+          >
+            <Ionicons name="remove" size={18} color={quantity <= 1 ? colors.textMuted : colors.accent} />
+          </Pressable>
+          <Text style={styles.quantityValue}>{quantity}</Text>
+          <Pressable style={styles.quantityButton} onPress={() => setQuantity((q) => q + 1)}>
+            <Ionicons name="add" size={18} color={colors.accent} />
+          </Pressable>
         </View>
 
         <Text style={styles.sectionTitle}>Mode de paiement</Text>
@@ -212,6 +232,26 @@ const styles = StyleSheet.create({
   },
   summaryTitle: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
   summaryPrice: { fontSize: 22, fontWeight: "700", color: colors.accent, marginTop: 4 },
+    summaryUnitPrice: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  quantityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    alignSelf: "flex-start",
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quantityValue: { fontSize: 16, fontWeight: "700", color: colors.textPrimary, minWidth: 24, textAlign: "center" },
   sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.textPrimary, marginBottom: spacing.sm, marginTop: spacing.sm },
   optionCard: {
     flexDirection: "row",

@@ -7,6 +7,8 @@ export interface EspaceResponse {
   name: string;
   description: string | null;
   location: string | null;
+  
+  photoUrl?: string | null;
   details: Record<string, unknown>;
   subscriptionActive: boolean;
   affiliationCodeUsed: string;
@@ -19,6 +21,7 @@ interface CreateEspacePayload {
   name: string;
   description?: string;
   location?: string;
+  photoUrl?: string;
   details?: Record<string, unknown>;
   affiliationCode: string;
 }
@@ -45,7 +48,13 @@ export async function getEspaceById(id: string) {
 
 export async function updateEspace(
   espaceId: string,
-  payload: { description?: string; location?: string; details?: Record<string, unknown> },
+  payload: {
+    name?: string;
+    description?: string;
+    location?: string;
+    photoUrl?: string;
+    details?: Record<string, unknown>;
+  },
 ) {
   return api.patch<EspaceResponse>(`/espaces/${espaceId}`, payload, true);
 }
