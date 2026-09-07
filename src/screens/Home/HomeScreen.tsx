@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,7 +9,8 @@ import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { ApiPublication, getFeed } from "../../services/publication.service";
 import { ApiRequestError, getImageUrl } from "../../services/api";
-
+import { getSubscriptionStatus, subscribeToEspace, unsubscribeFromEspace } from "../../services/espaces.service";
+import { getUserId } from "../../services/api";
 function PublicationVideo({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = true;
@@ -22,6 +23,69 @@ function PublicationVideo({ uri }: { uri: string }) {
       contentFit="cover"
       nativeControls
     />
+  );
+}
+
+function SubscribeChip({ espaceId, ownerId }: { espaceId: string; ownerId: string }) {
+  const [subscribed, setSubscribed] = useState(false);
+  const [myUserId, setMyUserId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      const uid = await getUserId();
+      if (cancelled) return;
+      setMyUserId(uid);
+      if (uid && uid !== ownerId) {
+        try {
+          const status = await getSubscriptionStatus(espaceId);
+          if (!cancelled) setSubscribed(status.subscribed);
+        } catch {
+          // pas grave si le statut n'a pas pu être chargé
+        }
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [espaceId, ownerId]);
+
+  if (!myUserId || myUserId === ownerId) return null;
+
+  async function handlePress() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (subscribed) {
+        await unsubscribeFromEspace(espaceId);
+        setSubscribed(false);
+      } else {
+        await subscribeToEspace(espaceId);
+        setSubscribed(true);
+      }
+    } catch {
+      // en cas d'échec, on ne change pas l'état affiché
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Pressable
+      style={[styles.subscribeChip, subscribed && styles.subscribeChipActive]}
+      onPress={handlePress}
+      disabled={busy}
+    >
+      <Ionicons
+        name={subscribed ? "notifications" : "notifications-outline"}
+        size={13}
+        color={subscribed ? colors.accent : colors.textSecondary}
+      />
+    </Pressable>
   );
 }
 
@@ -185,6 +249,7 @@ export function HomeScreen() {
                           <Text style={styles.badgeActiveText}>Actif</Text>
                         </View>
                       )}
+                      <SubscribeChip espaceId={item.espaceId} ownerId={item.espace.ownerId} />
                     </View>
                     <Text style={styles.location}>
                       {category ? `${category} · ` : ""}
@@ -319,6 +384,20 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   textCardBody: { fontSize: 13, color: colors.textPrimary, lineHeight: 19 },
+  subscribeChip: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  subscribeChipActive: {
+    backgroundColor: colors.accentBg,
+    borderColor: colors.accent,
+  },
   priceRow: {
     flexDirection: "row",
     alignItems: "center",

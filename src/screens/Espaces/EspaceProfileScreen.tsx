@@ -6,7 +6,13 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
-import { EspaceResponse, getEspaceById } from "../../services/espaces.service";
+import {
+  EspaceResponse,
+  getEspaceById,
+  getSubscriptionStatus,
+  subscribeToEspace,
+  unsubscribeFromEspace,
+} from "../../services/espaces.service";
 import { ApiPublication, getFeed } from "../../services/publication.service";
 import { ApiBadgeInfo, getBadgeInfo } from "../../services/badge.service";
 import { ApiRequestError, getImageUrl, getUserId } from "../../services/api";
@@ -34,21 +40,33 @@ export function EspaceProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [contacting, setContacting] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [togglingSubscription, setTogglingSubscription] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const uid = await getUserId();
       const [espaceData, pubsData, badgeData] = await Promise.all([
         getEspaceById(espaceId),
         getFeed(espaceId),
         getBadgeInfo(espaceId),
       ]);
+
+      const uid = await getUserId();
       setMyUserId(uid);
       setEspace(espaceData);
       setPublications(pubsData);
       setBadge(badgeData);
+
+      if (uid && espaceData.ownerId !== uid) {
+        try {
+          const status = await getSubscriptionStatus(espaceId);
+          setSubscribed(status.subscribed);
+        } catch {
+          // pas grave si le statut n'a pas pu être chargé
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof ApiRequestError ? err.message : "Erreur de chargement");
     } finally {
@@ -61,6 +79,24 @@ export function EspaceProfileScreen() {
       load();
     }, [load]),
   );
+
+  async function handleToggleSubscription() {
+    if (togglingSubscription || !espace) return;
+    setTogglingSubscription(true);
+    try {
+      if (subscribed) {
+        await unsubscribeFromEspace(espaceId);
+        setSubscribed(false);
+      } else {
+        await subscribeToEspace(espaceId);
+        setSubscribed(true);
+      }
+    } catch {
+      // en cas d'échec, on ne change pas l'état affiché
+    } finally {
+      setTogglingSubscription(false);
+    }
+  }
 
   async function handleContact() {
     if (!espace || contacting) return;
@@ -174,9 +210,24 @@ export function EspaceProfileScreen() {
             <Text style={styles.locationText}>{espace.location}</Text>
           </View>
         )}
-
         {!isMine && (
-          <View style={{ flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg }}>
+          <Pressable
+            style={[styles.subscribeButton, subscribed && styles.subscribeButtonActive]}
+            onPress={handleToggleSubscription}
+            disabled={togglingSubscription}
+          >
+            <Ionicons
+              name={subscribed ? "notifications" : "notifications-outline"}
+              size={16}
+              color={subscribed ? colors.accent : colors.textSecondary}
+            />
+            <Text style={[styles.subscribeButtonText, subscribed && styles.subscribeButtonTextActive]}>
+              {togglingSubscription ? "..." : subscribed ? "Abonné" : "S'abonner"}
+            </Text>
+          </Pressable>
+        )}
+        {!isMine && (
+          <View style={styles.actionRow}>
             <Pressable
               style={[styles.contactButton, { flex: 1, marginBottom: 0 }]}
               onPress={handleContact}
@@ -269,6 +320,21 @@ const styles = StyleSheet.create({
   },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: spacing.md },
   locationText: { fontSize: 12, color: colors.textMuted },
+  actionRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg },
+  subscribeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    marginBottom: spacing.sm,
+  },
+  subscribeButtonActive: { borderColor: colors.accent, backgroundColor: colors.accentBg },
+  subscribeButtonText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
+  subscribeButtonTextActive: { color: colors.accent },
   contactButton: {
     flexDirection: "row",
     alignItems: "center",

@@ -58,3 +58,15 @@ export async function updateEspace(
 ) {
   return api.patch<EspaceResponse>(`/espaces/${espaceId}`, payload, true);
 }
+
+export async function subscribeToEspace(espaceId: string) {
+  return api.post<{ subscribed: boolean }>(`/espaces/${espaceId}/subscribe`, undefined, true);
+}
+
+export async function unsubscribeFromEspace(espaceId: string) {
+  return api.delete<{ subscribed: boolean }>(`/espaces/${espaceId}/subscribe`, true);
+}
+
+export async function getSubscriptionStatus(espaceId: string) {
+  return api.get<{ subscribed: boolean }>(`/espaces/${espaceId}/subscribe/status`, true);
+}

@@ -1,14 +1,15 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { EspaceResponse, getEspaceById, updateEspace } from "../../services/espaces.service";
 import { ApiGroup, getGroupsByEspace, joinGroup } from "../../services/group.service";
-import { ApiRequestError } from "../../services/api";
+import { ApiRequestError, getImageUrl, uploadImage } from "../../services/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EntrepreneurDashboard">;
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -23,7 +24,11 @@ export function EntrepreneurDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [editPhotoUri, setEditPhotoUri] = useState<string | null>(null);
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editWhatsapp, setEditWhatsapp] = useState("");
   const [editSnapchat, setEditSnapchat] = useState("");
   const [editLinkedin, setEditLinkedin] = useState("");
@@ -38,7 +43,9 @@ export function EntrepreneurDashboardScreen() {
         getEspaceById(espaceId),
         getGroupsByEspace(espaceId),
       ]);
+           setEditName(espaceData.name);
       setEditBio(espaceData.description ?? "");
+      setExistingPhotoUrl(espaceData.photoUrl ?? null);
       setEditWhatsapp((espaceData.details?.whatsapp as string) ?? "");
       setEditSnapchat((espaceData.details?.snapchat as string) ?? "");
       setEditLinkedin((espaceData.details?.linkedin as string) ?? "");
@@ -71,12 +78,35 @@ export function EntrepreneurDashboardScreen() {
       // en cas d'échec, on ne navigue pas
     }
   }
-
-  async function handleSaveProfile() {
+  async function handlePickPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setEditPhotoUri(result.assets[0].uri);
+    }
+  }
+    async function handleSaveProfile() {
     setSavingProfile(true);
     try {
+      let uploadedPhotoUrl: string | undefined;
+      if (editPhotoUri) {
+        setUploadingPhoto(true);
+        uploadedPhotoUrl = await uploadImage(editPhotoUri);
+        setUploadingPhoto(false);
+      }
+
       await updateEspace(espaceId, {
+        name: editName.trim(),
         description: editBio.trim(),
+        photoUrl: uploadedPhotoUrl,
         details: {
           whatsapp: editWhatsapp.trim() || null,
           snapchat: editSnapchat.trim() || null,
@@ -90,6 +120,7 @@ export function EntrepreneurDashboardScreen() {
       // en cas d'échec, la modale reste ouverte
     } finally {
       setSavingProfile(false);
+      setUploadingPhoto(false);
     }
   }
 
@@ -245,8 +276,28 @@ export function EntrepreneurDashboardScreen() {
 
       <Modal visible={showEditProfile} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+                   <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Modifier mon profil</Text>
+
+            <Pressable style={styles.modalPhotoBox} onPress={handlePickPhoto}>
+              {editPhotoUri || existingPhotoUrl ? (
+                <Image
+                  source={{ uri: editPhotoUri ?? getImageUrl(existingPhotoUrl) ?? undefined }}
+                  style={styles.modalPhotoImage}
+                />
+              ) : (
+                <Ionicons name="camera-outline" size={22} color={colors.textSecondary} />
+              )}
+            </Pressable>
+
+            <Text style={styles.label}>Nom</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nom de l'espace"
+              placeholderTextColor={colors.textMuted}
+              value={editName}
+              onChangeText={setEditName}
+            />
 
             <TextInput
               style={[styles.input, styles.textarea]}
@@ -306,7 +357,9 @@ export function EntrepreneurDashboardScreen() {
                 <Text style={styles.modalCancelText}>Annuler</Text>
               </Pressable>
               <Pressable style={styles.modalSaveButton} onPress={handleSaveProfile} disabled={savingProfile}>
-                <Text style={styles.modalSaveText}>{savingProfile ? "..." : "Enregistrer"}</Text>
+                          <Text style={styles.modalSaveText}>
+                  {uploadingPhoto ? "Envoi..." : savingProfile ? "..." : "Enregistrer"}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -317,6 +370,19 @@ export function EntrepreneurDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
+    modalPhotoBox: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.surface,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+    overflow: "hidden",
+  },
+  modalPhotoImage: { width: "100%", height: "100%" },
+  label: { fontSize: 12, color: colors.textSecondary, marginBottom: 6 },
   container: { flex: 1, backgroundColor: colors.background },
   centerBox: { flex: 1, alignItems: "center", justifyContent: "center" },
   errorText: { fontSize: 13, color: colors.danger },

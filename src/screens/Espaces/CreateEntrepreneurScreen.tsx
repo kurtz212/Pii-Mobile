@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
+import * as ImagePicker from "expo-image-picker";
 import { createEspace } from "../../services/espaces.service";
-import { ApiRequestError } from "../../services/api";
+import { ApiRequestError, uploadImage } from "../../services/api";
 import { getMyAffiliation } from "../../services/affiliation.service";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +18,8 @@ const CATEGORIES = ["Conseil", "Artisanat", "Éducation", "Beauté & bien-être"
 export function CreateEntrepreneurScreen() {
   const navigation = useNavigation<Nav>();
   const [name, setName] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -55,17 +58,40 @@ export function CreateEntrepreneurScreen() {
 
   const canSubmit =
     name.trim().length > 0 && category !== null && affiliationCode.trim().length > 0 && !loading;
-
+  async function handlePickPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError("Autorise l'accès à ta galerie pour continuer.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
   async function handleCreate() {
     if (!canSubmit) return;
     setError(null);
     setLoading(true);
-    try {
+       try {
+      let uploadedPhotoUrl: string | undefined;
+      if (photoUri) {
+        setUploadingPhoto(true);
+        uploadedPhotoUrl = await uploadImage(photoUri);
+        setUploadingPhoto(false);
+      }
+
       await createEspace({
         type: "entrepreneur" as any,
         name: name.trim(),
         description: bio.trim() || undefined,
         location: location.trim() || undefined,
+        photoUrl: uploadedPhotoUrl,
         details: {
           category,
           whatsapp: whatsapp.trim() || null,
@@ -82,6 +108,7 @@ export function CreateEntrepreneurScreen() {
       setError(err instanceof ApiRequestError ? err.message : "Impossible de se connecter au serveur. Vérifie ta connexion.");
     } finally {
       setLoading(false);
+      setUploadingPhoto(false);
     }
   }
 
@@ -94,10 +121,16 @@ export function CreateEntrepreneurScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.logoBox}>
-          <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
-          <Text style={styles.logoText}>Ajouter une photo</Text>
-        </View>
+              <Pressable style={styles.logoBox} onPress={handlePickPhoto}>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.logoImage} />
+          ) : (
+            <>
+              <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
+              <Text style={styles.logoText}>Ajouter une photo</Text>
+            </>
+          )}
+        </Pressable>
 
         <Text style={styles.label}>Nom de l'activité</Text>
         <TextInput
@@ -256,7 +289,7 @@ export function CreateEntrepreneurScreen() {
           disabled={!canSubmit}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? "Création..." : "Créer mon espace entrepreneur"}
+                      {uploadingPhoto ? "Envoi de la photo..." : loading ? "Création..." : "Créer mon espace entrepreneur"}
           </Text>
         </Pressable>
       </ScrollView>
@@ -289,6 +322,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: spacing.lg,
   },
+  logoImage: { width: "100%", height: "100%", borderRadius: 44 },
   logoText: { fontSize: 10, color: colors.textSecondary, textAlign: "center", width: 70 },
   label: { fontSize: 12, color: colors.textSecondary, marginBottom: 6 },
   sectionLabel: { fontSize: 12, fontWeight: "700", color: colors.textPrimary, marginBottom: spacing.sm, marginTop: spacing.sm },

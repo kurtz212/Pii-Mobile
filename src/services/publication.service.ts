@@ -7,6 +7,7 @@ export interface ApiPublication {
   espaceId: string;
   espace: {
     id: string;
+    ownerId: string;
     name: string;
     type: string;
     location: string | null;

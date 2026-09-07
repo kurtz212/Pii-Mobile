@@ -5,7 +5,7 @@
 // car il pointerait vers le téléphone lui-même, pas vers le PC qui fait
 // tourner le backend. Il faut l'adresse IP locale du PC sur le réseau
 // Wi-Fi (trouvée avec `ipconfig` sous "Adresse IPv4").
-const API_BASE_URL = "http://192.168.11.101:3000";
+const API_BASE_URL = "http://192.168.1.70:3000";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -91,6 +91,7 @@ export const api = {
     request<T>(path, { method: "POST", body, auth }),
   patch: <T>(path: string, body?: unknown, auth = false) =>
     request<T>(path, { method: "PATCH", body, auth }),
+  delete: <T>(path: string, auth = false) => request<T>(path, { method: "DELETE", auth }),
 };
 export function getImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
