@@ -17,7 +17,19 @@
     },
     "plugins": [
       "expo-status-bar",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Autoriser Pii à accéder à votre position pour la partager dans une conversation."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Autoriser Pii à accéder à vos contacts pour partager un contact dans une conversation."
+        }
+      ]
     ]
   }
 }

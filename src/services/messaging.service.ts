@@ -1,6 +1,6 @@
 import { api } from "./api";
 
-export type MessageType = "text" | "audio" | "location" | "file";
+export type MessageType = "text" | "audio" | "image" | "video" | "location" | "contact" | "file";
 
 interface ParticipantInfo {
   id: string;
@@ -16,6 +16,18 @@ export interface ApiConversation {
   participantTwo: ParticipantInfo;
   lastMessageAt: string | null;
   createdAt: string;
+  unreadCount: number;
+}
+
+export interface MessageMetadata {
+  url?: string;
+  fileName?: string;
+  fileSize?: number;
+  latitude?: number;
+  longitude?: number;
+  label?: string;
+  name?: string;
+  phone?: string;
 }
 
 export interface ApiMessage {
@@ -24,6 +36,8 @@ export interface ApiMessage {
   senderId: string;
   type: MessageType;
   content: string;
+  translatedContent?: string;
+  metadata: MessageMetadata | null;
   createdAt: string;
 }
 
@@ -39,22 +53,35 @@ export async function getMessages(conversationId: string) {
   return api.get<ApiMessage[]>(`/conversations/${conversationId}/messages`, true);
 }
 
-export async function sendMessage(conversationId: string, content: string, type: MessageType = "text") {
-  return api.post<ApiMessage>(`/conversations/${conversationId}/messages`, { content, type }, true);
+export async function sendMessage(
+  conversationId: string,
+  content: string,
+  type: MessageType = "text",
+  metadata?: MessageMetadata,
+) {
+  // L'API accepte uniquement content et type. Les données d'une pièce
+  // jointe sont donc sérialisées dans content pour éviter le rejet de
+  // la propriété metadata par le DTO backend.
+  const messageContent = metadata ? JSON.stringify(metadata) : content;
+  return api.post<ApiMessage>(
+    `/conversations/${conversationId}/messages`,
+    { content: messageContent, type },
+    true,
+  );
 }
 
-// Détermine l'autre participant d'une conversation, par rapport à
-// l'utilisateur connecté — évite de répéter cette logique dans chaque écran.
 export function getOtherParticipant(conversation: ApiConversation, myUserId: string): ParticipantInfo {
   return conversation.participantOneId === myUserId
     ? conversation.participantTwo
     : conversation.participantOne;
 }
 
-// Initiales à partir du nom complet, pour l'avatar (ex: "Aïcha Traoré" -> "AT")
 export function initialsFromName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? "";
   const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
   return (first + last).toUpperCase();
+}
+export async function getUnreadCount() {
+  return api.get<{ count: number }>("/conversations/unread-count", true);
 }

@@ -32,6 +32,7 @@ export type RootStackParamList = {
     tranchesActivees: boolean;
   };
     ForgotPassword: undefined;
+      LangueMessages: undefined;
       LivraisonGroupee: undefined;
       ModifierEspace: { espaceId: string };  
   ResetPassword: { email: string };

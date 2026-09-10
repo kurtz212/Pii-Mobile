@@ -137,7 +137,12 @@ export function AgenceCargoDashboardScreen() {
           <Text style={styles.headerTitle}>{espace.name}</Text>
           <Text style={styles.headerSubtitle}>Tableau de bord</Text>
         </View>
-        <Ionicons name="settings-outline" size={19} color={colors.textSecondary} />
+            <Ionicons
+          name="settings-outline"
+          size={19}
+          color={colors.textSecondary}
+          onPress={() => navigation.navigate("ModifierEspace", { espaceId })}
+        />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>

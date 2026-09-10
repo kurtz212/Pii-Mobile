@@ -126,14 +126,28 @@ export function MessagingListScreen() {
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{initials}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
+                                <View style={{ flex: 1 }}>
                   <View style={styles.rowTop}>
-                    <Text style={styles.contactName}>{other.fullName}</Text>
+                                 <Text style={[styles.contactName, item.unreadCount > 0 && styles.contactNameUnread]}>
+                      {other.fullName}
+                    </Text>
                     <Text style={styles.timestamp}>{formatTime(item.lastMessageAt)}</Text>
                   </View>
-                  <Text style={styles.previewText} numberOfLines={1}>
-                    {item.lastMessageAt ? "Appuie pour voir la conversation" : "Nouvelle conversation"}
-                  </Text>
+                  <View style={styles.previewRow}>
+                    <Text
+                      style={[styles.previewText, item.unreadCount > 0 && styles.previewTextUnread]}
+                      numberOfLines={1}
+                    >
+                      {item.lastMessageAt ? "Appuie pour voir la conversation" : "Nouvelle conversation"}
+                    </Text>
+                    {item.unreadCount > 0 && (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadBadgeText}>
+                          {item.unreadCount > 9 ? "9+" : item.unreadCount}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </Pressable>
             );
@@ -192,5 +206,18 @@ const styles = StyleSheet.create({
   rowTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   contactName: { fontSize: 14, fontWeight: "600", color: colors.textPrimary },
   timestamp: { fontSize: 11, color: colors.textMuted },
-  previewText: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  previewText: { fontSize: 12, color: colors.textSecondary, marginTop: 2, flex: 1 },
+  previewTextUnread: { color: colors.textPrimary, fontWeight: "600" },
+  previewRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  contactNameUnread: { fontWeight: "700" },
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+  },
+  unreadBadgeText: { fontSize: 10, fontWeight: "700", color: colors.onAccent },
 });

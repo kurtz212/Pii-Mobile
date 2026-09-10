@@ -29,6 +29,7 @@ export interface ApiUserProfile {
   idDocumentType: string | null;
   idDocumentNumber: string | null;
   kycStatus: "none" | "submitted" | "verified";
+  preferredTextLanguage: string;
 }
 
 export async function getMyProfile() {
@@ -37,4 +38,22 @@ export async function getMyProfile() {
 
 export async function submitKyc(idDocumentType: string, idDocumentNumber: string) {
   return api.patch<ApiUserProfile>("/users/me/kyc", { idDocumentType, idDocumentNumber }, true);
+}
+
+export const SUPPORTED_LANGUAGES = [
+  { code: "fr", label: "Français" },
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "ar", label: "العربية" },
+  { code: "pt", label: "Português" },
+  { code: "de", label: "Deutsch" },
+  { code: "it", label: "Italiano" },
+];
+
+export async function updateLanguagePreferences(preferredTextLanguage: string) {
+  return api.patch<ApiUserProfile & { preferredTextLanguage: string }>(
+    "/users/me/language-preferences",
+    { preferredTextLanguage },
+    true,
+  );
 }

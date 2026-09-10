@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
+import * as ImagePicker from "expo-image-picker";
 import { createEspace } from "../../services/espaces.service";
-import { ApiRequestError } from "../../services/api";
+import { ApiRequestError, uploadImage } from "../../services/api";
 import { getMyAffiliation } from "../../services/affiliation.service";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -16,7 +17,9 @@ const TYPES_MARCHANDISES = ["Marchandises générales", "Alimentaire", "Électro
 
 export function CreateAgenceCargoScreen() {
   const navigation = useNavigation<Nav>();
-  const [name, setName] = useState("");
+   const [name, setName] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [typesMarchandises, setTypesMarchandises] = useState<string[]>([]);
   const [zonesDesservies, setZonesDesservies] = useState("");
   const [description, setDescription] = useState("");
@@ -57,17 +60,41 @@ export function CreateAgenceCargoScreen() {
   function toggleType(v: string) {
     setTypesMarchandises((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
   }
+  async function handlePickPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError("Autorise l'accès à ta galerie pour continuer.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
 
   async function handleCreate() {
     if (!canSubmit) return;
     setError(null);
     setLoading(true);
-    try {
+      try {
+      let uploadedPhotoUrl: string | undefined;
+      if (photoUri) {
+        setUploadingPhoto(true);
+        uploadedPhotoUrl = await uploadImage(photoUri);
+        setUploadingPhoto(false);
+      }
+
       await createEspace({
         type: "agence_cargo" as any,
         name: name.trim(),
         description: description.trim() || undefined,
         location: zonesDesservies.trim(),
+        photoUrl: uploadedPhotoUrl,
         details: { typesMarchandises, zonesDesservies: zonesDesservies.trim() },
         affiliationCode: affiliationCode.trim(),
       } as any);
@@ -76,6 +103,7 @@ export function CreateAgenceCargoScreen() {
       setError(err instanceof ApiRequestError ? err.message : "Impossible de se connecter au serveur. Vérifie ta connexion.");
     } finally {
       setLoading(false);
+      setUploadingPhoto(false);
     }
   }
 
@@ -88,15 +116,21 @@ export function CreateAgenceCargoScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.logoBox}>
-          <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
-          <Text style={styles.logoText}>Ajouter un logo</Text>
-        </View>
+              <Pressable style={styles.logoBox} onPress={handlePickPhoto}>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.logoImage} />
+          ) : (
+            <>
+              <Ionicons name="camera-outline" size={24} color={colors.textSecondary} />
+              <Text style={styles.logoText}>Ajouter un logo</Text>
+            </>
+          )}
+        </Pressable>
 
         <Text style={styles.label}>Nom de l'agence</Text>
         <TextInput
           style={styles.input}
-          placeholder="Ex. Sahel Cargo Express"
+          placeholder="Ex. Cargo Express"
           placeholderTextColor={colors.textMuted}
           value={name}
           onChangeText={setName}
@@ -187,7 +221,9 @@ export function CreateAgenceCargoScreen() {
           onPress={handleCreate}
           disabled={!canSubmit}
         >
-          <Text style={styles.submitButtonText}>{loading ? "Création..." : "Créer mon agence cargo"}</Text>
+                   <Text style={styles.submitButtonText}>
+            {uploadingPhoto ? "Envoi de la photo..." : loading ? "Création..." : "Créer mon agence cargo"}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -203,6 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
+  logoImage: { width: "100%", height: "100%", borderRadius: 44 },
   headerTitle: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
   logoBox: {

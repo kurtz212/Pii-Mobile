@@ -50,6 +50,7 @@ import { GroupedDeliveryScreen } from "../screens/Delivery/GroupedDeliveryScreen
 import { ForgotPasswordScreen } from "../screens/Auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "../screens/Auth/ResetPasswordScreen";
 import { EditEspaceScreen } from "../screens/Espaces/EditEspaceScreen";
+import { LanguageSettingsScreen } from "../screens/Profile/LanguageSettingsScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
@@ -82,6 +83,7 @@ export function RootNavigator() {
         initialRouteName={isAuthenticated ? "Tabs" : "Welcome"}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
+                <Stack.Screen name="LangueMessages" component={LanguageSettingsScreen} />
         <Stack.Screen name="Tabs" component={BottomTabNavigator} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />

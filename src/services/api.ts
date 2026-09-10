@@ -5,7 +5,7 @@
 // car il pointerait vers le téléphone lui-même, pas vers le PC qui fait
 // tourner le backend. Il faut l'adresse IP locale du PC sur le réseau
 // Wi-Fi (trouvée avec `ipconfig` sous "Adresse IPv4").
-const API_BASE_URL = "http://192.168.1.70:3000";
+const API_BASE_URL = "http://192.168.11.103:3000";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -162,4 +162,30 @@ export interface ApiUserSearchResult {
 
 export async function searchUsers(query: string) {
   return api.get<ApiUserSearchResult[]>(`/users/search?q=${encodeURIComponent(query)}`, true);
+}
+
+export async function uploadFile(localUri: string, originalName: string): Promise<{ url: string; fileName: string; fileSize: number }> {
+  const token = await getToken();
+
+  const fileResponse = await fetch(localUri);
+  const blob = await fileResponse.blob();
+
+  const formData = new FormData();
+  formData.append("file", blob, originalName);
+
+  const response = await fetch(`${API_BASE_URL}/uploads/file`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new ApiRequestError(data?.message ?? "Échec de l'envoi du fichier", response.status);
+  }
+  return { url: data.url as string, fileName: data.fileName as string, fileSize: data.fileSize as number };
+}
+export async function setLivreurStatus(isLivreur: boolean) {
+  return api.patch<{ success: boolean }>("/users/me/livreur-status", { isLivreur }, true);
 }

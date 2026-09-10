@@ -7,7 +7,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { getMyEspaces, EspaceResponse } from "../../services/espaces.service";
-import { ApiRequestError } from "../../services/api";
+import { ApiRequestError, setLivreurStatus } from "../../services/api";
+import { getMyProfile } from "../../services/affiliation.service";
 import { logout } from "../../services/auth.service";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -48,7 +49,22 @@ export function ProfileScreen() {
   const [espaces, setEspaces] = useState<EspaceResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLivreur, setIsLivreurState] = useState(false);
+  const [togglingLivreur, setTogglingLivreur] = useState(false);
 
+    async function handleToggleLivreur() {
+    if (togglingLivreur) return;
+    const newValue = !isLivreur;
+    setTogglingLivreur(true);
+    try {
+      await setLivreurStatus(newValue);
+      setIsLivreurState(newValue);
+    } catch {
+      // en cas d'échec, l'état affiché ne change pas
+    } finally {
+      setTogglingLivreur(false);
+    }
+  }
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -59,6 +75,8 @@ export function ProfileScreen() {
         try {
           const data = await getMyEspaces();
           if (!cancelled) setEspaces(data);
+          const profile = await getMyProfile();
+          if (!cancelled) setIsLivreurState((profile as any).isLivreur ?? false);
         } catch (err: unknown) {
           if (!cancelled) {
             if (err instanceof ApiRequestError) {
@@ -88,15 +106,26 @@ export function ProfileScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Profil</Text>
-
+<Pressable style={styles.actionButton} onPress={handleToggleLivreur} disabled={togglingLivreur}>
+  <Ionicons name="bicycle-outline" size={20} color={colors.accent} />
+  <Text style={styles.actionText}>Je suis livreur</Text>
+  <View style={[styles.toggle, isLivreur && styles.toggleActive]}>
+    <View style={[styles.toggleDot, isLivreur && styles.toggleDotActive]} />
+  </View>
+</Pressable>
+<Pressable style={styles.actionButton} onPress={() => navigation.navigate("LangueMessages")}>
+  <Ionicons name="language-outline" size={20} color={colors.accent} />
+  <Text style={styles.actionText}>Langue des messages</Text>
+  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: "auto" }} />
+</Pressable>
 <Pressable style={styles.actionButton} onPress={() => navigation.navigate("MesCommandes")}>
   <Ionicons name="receipt-outline" size={20} color={colors.accent} />
   <Text style={styles.actionText}>Mes commandes</Text>
-  <Pressable style={styles.actionButton} onPress={() => navigation.navigate("MesDevis")}>
-  <Ionicons name="document-text-outline" size={20} color={colors.accent} />
-  <Text style={styles.actionText}>Mes demandes de devis</Text>
   <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: "auto" }} />
 </Pressable>
+<Pressable style={styles.actionButton} onPress={() => navigation.navigate("MesDevis")}>
+  <Ionicons name="document-text-outline" size={20} color={colors.accent} />
+  <Text style={styles.actionText}>Mes demandes de devis</Text>
   <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: "auto" }} />
 </Pressable>
 <Pressable style={styles.actionButton} onPress={() => navigation.navigate("InvitationsEquipe")}>
@@ -234,7 +263,24 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
   },
+
   actionText: { fontSize: 14, fontWeight: "600", color: colors.textPrimary },
+    toggle: {
+    width: 40,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.border,
+    padding: 2,
+    marginLeft: "auto",
+  },
+  toggleActive: { backgroundColor: colors.accent },
+  toggleDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.background,
+  },
+  toggleDotActive: { transform: [{ translateX: 18 }] },
   sectionHeader: {
     fontSize: 12,
     fontWeight: "700",

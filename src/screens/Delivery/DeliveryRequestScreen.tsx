@@ -485,10 +485,13 @@ function LivrerView() {
   const [error, setError] = useState<string | null>(null);
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [needsLivreurStatus, setNeedsLivreurStatus] = useState(false);
+  const [togglingLivreur, setTogglingLivreur] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setNeedsLivreurStatus(false);
     try {
       const data = await getOpenDeliveryRequests();
       setRequests(data);
@@ -499,11 +502,28 @@ function LivrerView() {
         .map((e) => ({ id: e.id, name: e.name }));
       setMyAgencies(agencies);
     } catch (err: unknown) {
-      setError(err instanceof ApiRequestError ? err.message : "Erreur de chargement");
+      if (err instanceof ApiRequestError && err.statusCode === 403) {
+        setNeedsLivreurStatus(true);
+      } else {
+        setError(err instanceof ApiRequestError ? err.message : "Erreur de chargement");
+      }
     } finally {
       setLoading(false);
     }
   }, []);
+
+  async function handleActivateLivreur() {
+    setTogglingLivreur(true);
+    try {
+      const { setLivreurStatus } = await import("../../services/api");
+      await setLivreurStatus(true);
+      await load();
+    } catch {
+      // en cas d'échec, on reste sur l'écran d'invitation
+    } finally {
+      setTogglingLivreur(false);
+    }
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -528,10 +548,31 @@ function LivrerView() {
     }
   }
 
-  if (loading) {
+   if (loading) {
     return (
       <View style={styles.centerBox}>
         <ActivityIndicator color={colors.accent} />
+      </View>
+    );
+  }
+
+  if (needsLivreurStatus) {
+    return (
+      <View style={styles.livreurGateBox}>
+        <Ionicons name="bicycle-outline" size={36} color={colors.accent} />
+        <Text style={styles.livreurGateTitle}>Deviens livreur</Text>
+        <Text style={styles.livreurGateText}>
+          Active ton statut de livreur pour voir les demandes de livraison et proposer tes services.
+        </Text>
+        <Pressable
+          style={styles.livreurGateButton}
+          onPress={handleActivateLivreur}
+          disabled={togglingLivreur}
+        >
+          <Text style={styles.livreurGateButtonText}>
+            {togglingLivreur ? "..." : "Activer le statut livreur"}
+          </Text>
+        </Pressable>
       </View>
     );
   }
@@ -674,7 +715,7 @@ function MesLivraisonsView() {
 
   if (loading) {
     return (
-      <View style={styles.centerBox}>
+           <View style={styles.centerBox}>
         <ActivityIndicator color={colors.accent} />
       </View>
     );
@@ -791,6 +832,22 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: colors.onAccent },
   content: { flex: 1, paddingHorizontal: spacing.lg },
   centerBox: { flex: 1, alignItems: "center", justifyContent: "center" },
+  livreurGateBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+    gap: spacing.sm,
+  },
+  livreurGateTitle: { fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginTop: spacing.sm },
+  livreurGateText: { fontSize: 13, color: colors.textSecondary, textAlign: "center", lineHeight: 19, marginBottom: spacing.md },
+  livreurGateButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+  },
+  livreurGateButtonText: { fontSize: 14, fontWeight: "600", color: colors.onAccent },
   label: { fontSize: 12, color: colors.textSecondary, marginBottom: 6 },
   input: {
     borderWidth: 1,
