@@ -5,12 +5,13 @@ export type PublicationContentType = "image" | "video" | "text";
 export interface ApiPublication {
   id: string;
   espaceId: string;
-  espace: {
+   espace: {
     id: string;
     ownerId: string;
     name: string;
     type: string;
     location: string | null;
+    photoUrl: string | null;
     details: Record<string, unknown>;
     subscriptionActive: boolean;
   };

@@ -237,10 +237,14 @@ export function HomeScreen() {
 
             return (
               <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.avatar, { backgroundColor: palette.bg }]}>
-                    <Text style={[styles.avatarText, { color: palette.fg }]}>{initials}</Text>
-                  </View>
+                            <View style={styles.cardHeader}>
+                  {item.espace.photoUrl ? (
+                    <Image source={{ uri: getImageUrl(item.espace.photoUrl) ?? undefined }} style={styles.avatarPhoto} />
+                  ) : (
+                    <View style={[styles.avatar, { backgroundColor: palette.bg }]}>
+                      <Text style={[styles.avatarText, { color: palette.fg }]}>{initials}</Text>
+                    </View>
+                  )}
                   <View style={{ flex: 1 }}>
                     <View style={styles.nameRow}>
                       <Text style={styles.name}>{item.espace.name}</Text>
@@ -366,6 +370,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.sm },
   avatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 12, fontWeight: "600" },
+    avatarPhoto: { width: 36, height: 36, borderRadius: 18 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   name: { fontSize: 14, fontWeight: "600", color: colors.textPrimary },
   badgeActive: { backgroundColor: colors.accentBg, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 },

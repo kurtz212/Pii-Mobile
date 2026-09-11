@@ -57,3 +57,6 @@ export async function updateLanguagePreferences(preferredTextLanguage: string) {
     true,
   );
 }
+export async function claimAffiliationCode() {
+  return api.post<{ affiliationCode: string }>("/users/me/claim-affiliation-code", undefined, true);
+}

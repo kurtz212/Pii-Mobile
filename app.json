@@ -5,6 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/pi.jpeg",
     "splash": {
       "backgroundColor": "#1F3A5F"
     },
@@ -13,7 +14,13 @@
       "bundleIdentifier": "com.pii.app"
     },
     "android": {
-      "package": "com.pii.app"
+      "package": "com.pii.app",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
     "plugins": [
       "expo-status-bar",
@@ -30,6 +37,11 @@
           "contactsPermission": "Autoriser Pii à accéder à vos contacts pour partager un contact dans une conversation."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3e2c9e99-1f0f-4282-99e6-490c9bd5eb90"
+      }
+    }
   }
 }

@@ -15,7 +15,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.content}>
-        <Text style={styles.logo}>Pii</Text>
+        <Text style={styles.logo}> Bienvenue sur Pii</Text>
 
         <View style={styles.illustration}>
           <View style={[styles.iconBadge, styles.iconBadgeTopLeft]}>

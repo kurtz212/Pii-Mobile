@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -155,10 +155,14 @@ export function EspaceProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initialsFromName(espace.name)}</Text>
-          </View>
+                <View style={styles.profileHeader}>
+          {espace.photoUrl ? (
+            <Image source={{ uri: getImageUrl(espace.photoUrl) ?? undefined }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initialsFromName(espace.name)}</Text>
+            </View>
+          )}
           <Text style={styles.name}>{espace.name}</Text>
           {category && <Text style={styles.category}>{category}</Text>}
           {badge?.level && (
@@ -303,6 +307,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   avatarText: { fontSize: 22, fontWeight: "700", color: colors.accent },
+    avatarImage: { width: 72, height: 72, borderRadius: 36, marginBottom: spacing.sm },
   name: { fontSize: 18, fontWeight: "700", color: colors.textPrimary },
   category: { fontSize: 12, color: colors.secondary, marginTop: 2, fontWeight: "600" },
   badgeRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: spacing.sm },

@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
-import { AffiliationInfo, getMyAffiliation, updateMobileMoney } from "../../services/affiliation.service";
+import { AffiliationInfo, getMyAffiliation, updateMobileMoney, claimAffiliationCode } from "../../services/affiliation.service";
 import { ApiRequestError } from "../../services/api";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -26,6 +26,7 @@ export function MobileMoneyScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [generatingCode, setGeneratingCode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +51,19 @@ export function MobileMoneyScreen() {
   }, []);
 
   const canSubmit = operator !== null && number.trim().length > 0 && !saving;
+
+   async function handleGenerateCode() {
+    setGeneratingCode(true);
+    setError(null);
+    try {
+      const result = await claimAffiliationCode();
+      setAffiliation((prev) => (prev ? { ...prev, affiliationCode: result.affiliationCode } : prev));
+    } catch (err: unknown) {
+      setError(err instanceof ApiRequestError ? err.message : "Erreur lors de la génération du code");
+    } finally {
+      setGeneratingCode(false);
+    }
+  }
 
   async function handleSave() {
     if (!operator || !canSubmit) return;
@@ -85,14 +99,37 @@ export function MobileMoneyScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {affiliation && (
+               {affiliation && (
           <View style={styles.codeCard}>
             <Text style={styles.codeLabel}>Ton code d'affiliation</Text>
             <Text style={styles.codeValue}>{affiliation.affiliationCode}</Text>
-            <Text style={styles.codeHint}>
-              Partage ce code : chaque création d'espace d'un filleul te rapporte une commission,
-              versée directement sur ton compte mobile money ci-dessous.
-            </Text>
+
+            {affiliation.affiliationCode === "0000" ? (
+              <>
+                <Text style={styles.codeHint}>
+                  Tu n'as pas encore de code personnel. Renseigne ton compte mobile money
+                  ci-dessous, puis génère ton code pour commencer à parrainer.
+                </Text>
+                <Pressable
+                  style={[
+                    styles.generateButton,
+                    (!operator || !number.trim() || generatingCode) && styles.generateButtonDisabled,
+                  ]}
+                  onPress={handleGenerateCode}
+                  disabled={!operator || !number.trim() || generatingCode}
+                >
+                  <Text style={styles.generateButtonText}>
+                    {generatingCode ? "Génération..." : "Générer mon code"}
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <Text style={styles.codeHint}>
+                Partage ce code : chaque création d'espace d'un filleul te rapporte une commission,
+                versée directement sur ton compte mobile money ci-dessous.
+              </Text>
+            )}
+
             {affiliation.isCodeFieldLocked && (
               <View style={styles.lockedNote}>
                 <Ionicons name="lock-closed-outline" size={13} color={colors.secondary} />
@@ -104,7 +141,6 @@ export function MobileMoneyScreen() {
             )}
           </View>
         )}
-
         <Text style={styles.sectionTitle}>Compte de réception</Text>
         <Text style={styles.sectionSubtitle}>
           Choisis l'opérateur et le numéro sur lequel tes commissions seront versées.
@@ -188,6 +224,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   codeHint: { fontSize: 12, color: colors.textPrimary, lineHeight: 17 },
+    generateButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  generateButtonDisabled: { backgroundColor: colors.borderStrong },
+  generateButtonText: { fontSize: 13, fontWeight: "600", color: colors.onAccent },
   lockedNote: {
     flexDirection: "row",
     alignItems: "center",

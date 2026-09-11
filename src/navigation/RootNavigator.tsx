@@ -51,13 +51,15 @@ import { ForgotPasswordScreen } from "../screens/Auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "../screens/Auth/ResetPasswordScreen";
 import { EditEspaceScreen } from "../screens/Espaces/EditEspaceScreen";
 import { LanguageSettingsScreen } from "../screens/Profile/LanguageSettingsScreen";
+import { SettingsScreen } from "../screens/Profile/SettingsScreen";
+import { PrivacyPolicyScreen } from "../screens/Profile/PrivacyPolicyScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   const [isReady, setIsReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     (async () => {
       const token = await getToken();
       setIsAuthenticated(!!token);
@@ -83,7 +85,7 @@ export function RootNavigator() {
         initialRouteName={isAuthenticated ? "Tabs" : "Welcome"}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-                <Stack.Screen name="LangueMessages" component={LanguageSettingsScreen} />
+              <Stack.Screen name="LangueMessages" component={LanguageSettingsScreen} />
         <Stack.Screen name="Tabs" component={BottomTabNavigator} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
@@ -94,8 +96,10 @@ export function RootNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="LivraisonGroupee" component={GroupedDeliveryScreen} />
-                <Stack.Screen name="ModifierEspace" component={EditEspaceScreen} />
-               <Stack.Screen name="QuoteRequestDetail" component={QuoteRequestDetailScreen} />
+              <Stack.Screen name="Parametres" component={SettingsScreen} />
+        <Stack.Screen name="PolitiqueConfidentialite" component={PrivacyPolicyScreen} />
+              <Stack.Screen name="ModifierEspace" component={EditEspaceScreen} />
+              <Stack.Screen name="QuoteRequestDetail" component={QuoteRequestDetailScreen} />
         <Stack.Screen
           name="NouveauMessage"
           component={NewMessageScreen}
@@ -103,12 +107,12 @@ export function RootNavigator() {
         />
         <Stack.Screen name="GererPublications" component={ManagePublicationsScreen} />
         <Stack.Screen name="ProfilEspace" component={EspaceProfileScreen} />
-               <Stack.Screen
+              <Stack.Screen
           name="SelectionTypeDemande"
           component={RequestTypeSelectionScreen}
           options={{ presentation: "modal" }}
         />
-                <Stack.Screen name="DemandeDevisCargo" component={RequestQuoteCargoScreen} />
+              <Stack.Screen name="DemandeDevisCargo" component={RequestQuoteCargoScreen} />
         <Stack.Screen name="DemandeDevisTransitaire" component={RequestQuoteTransitaireScreen} />
         <Stack.Screen name="MesDevis" component={MyQuotesScreen} />
         <Stack.Screen name="DevisRecus" component={ReceivedQuotesScreen} />

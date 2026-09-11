@@ -18,9 +18,9 @@ export type RootStackParamList = {
   NouveauMessage: undefined;
   GererPublications: { espaceId: string };
   ProfilEspace: { espaceId: string };
-   SelectionTypeDemande: undefined;
+  SelectionTypeDemande: undefined;
   DemandeDevisCargo: undefined;
-    QuoteRequestDetail: { requestId: string };
+  QuoteRequestDetail: { requestId: string };
   DemandeDevisTransitaire: undefined;
   MesDevis: undefined;
   DevisRecus: { espaceId: string };
@@ -31,10 +31,12 @@ export type RootStackParamList = {
     price: number;
     tranchesActivees: boolean;
   };
-    ForgotPassword: undefined;
-      LangueMessages: undefined;
-      LivraisonGroupee: undefined;
-      ModifierEspace: { espaceId: string };  
+  ForgotPassword: undefined;
+  LangueMessages: undefined;
+  LivraisonGroupee: undefined;
+  Parametres: undefined;
+  PolitiqueConfidentialite: undefined;
+  ModifierEspace: { espaceId: string };
   ResetPassword: { email: string };
   SelectionnerTypeEspace: undefined;
   CreerBoutique: undefined;
@@ -63,6 +65,6 @@ export type RootStackParamList = {
   };
   LiveViewer: undefined;
   Tontines: undefined;
-CreerTontine: undefined;
+  CreerTontine: undefined;
   TontineDetail: { tontineId: string };
 };
