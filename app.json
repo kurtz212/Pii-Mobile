@@ -13,10 +13,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.pii.app"
     },
-        "android": {
+    "android": {
       "package": "com.pii.app",
-          "usesCleartextTraffic": true,
-  
+      "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -24,9 +23,17 @@
         "android.permission.WRITE_CONTACTS"
       ]
     },
-    "plugins": [
+       "plugins": [
       "expo-status-bar",
       "expo-video",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
       [
         "expo-location",
         {
@@ -38,7 +45,8 @@
         {
           "contactsPermission": "Autoriser Pii à accéder à vos contacts pour partager un contact dans une conversation."
         }
-      ]
+      ],
+      "expo-build-properties"
     ],
     "extra": {
       "eas": {
