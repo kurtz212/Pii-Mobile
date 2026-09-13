@@ -1,47 +1,56 @@
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { api } from "./api";
 
-// Affiche la notification même si l'app est ouverte au premier plan —
-// sinon iOS/Android la masquent silencieusement pendant l'utilisation.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Les notifications push Android ne fonctionnent plus du tout dans
+// Expo Go depuis le SDK 53 — il faut un vrai build compilé (EAS
+// Build) pour les tester sur Android. Sur iOS, Expo Go les supporte
+// encore. On détecte Expo Go pour éviter de charger le module natif
+// dans ce cas précis, sinon l'app plante au démarrage sur Android.
+const isExpoGo = Constants.appOwnership === "expo";
 
-// Demande la permission, récupère le token Expo Push de cet appareil,
-// et l'enregistre auprès du backend. Échoue silencieusement à chaque
-// étape (pas de simulateur, permission refusée, backend injoignable)
-// — ne doit jamais bloquer l'utilisation normale de l'app.
 export async function registerForPushNotifications(): Promise<void> {
-  if (!Device.isDevice) {
-    return; // les simulateurs ne supportent pas les vraies notifications push
-  }
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-  if (finalStatus !== "granted") {
+  if (isExpoGo && Platform.OS === "android") {
+    // Notifications indisponibles dans Expo Go sur Android — rien à
+    // faire, l'app continue normalement sans notifications push.
     return;
   }
 
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-    });
-  }
-
   try {
+    const Notifications = await import("expo-notifications");
+    const Device = await import("expo-device");
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    if (!Device.isDevice) {
+      return;
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      return;
+    }
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+      });
+    }
+
     const tokenData = await Notifications.getExpoPushTokenAsync();
     await api.patch("/users/me/push-token", { pushToken: tokenData.data }, true);
   } catch {
