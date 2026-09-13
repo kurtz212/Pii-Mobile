@@ -8,6 +8,8 @@ import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { EspaceResponse, getEspacesPublic } from "../../services/espaces.service";
 import { ApiRequestError, getImageUrl, getUserId } from "../../services/api";
+import { SkeletonConversationRow } from "@/components/Skeleton";
+import { SkeletonEspaceCard } from "@/components/Skeleton";
 import { initialsFromName, startConversation } from "../../services/messaging.service";
 import { ApiBadgeInfo, getBadgeInfo } from "../../services/badge.service";
 
@@ -87,33 +89,35 @@ export function AnnuaireScreen() {
         <View style={{ width: 20 }} />
       </View>
 
-      <FlatList
+          <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
         data={TYPES}
         keyExtractor={(item) => item.value}
         contentContainerStyle={styles.typeTabs}
         renderItem={({ item }) => {
           const active = activeType === item.value;
           return (
-            <Pressable
-              style={[styles.typeTab, active && styles.typeTabActive]}
-              onPress={() => setActiveType(item.value)}
-            >
-              <Ionicons name={item.icon} size={14} color={active ? colors.onAccent : colors.textSecondary} />
+            <Pressable style={styles.typeTab} onPress={() => setActiveType(item.value)}>
+              <Ionicons name={item.icon} size={14} color={active ? colors.accent : colors.textSecondary} />
               <Text style={[styles.typeTabText, active && styles.typeTabTextActive]}>{item.label}</Text>
+              {active && <View style={styles.typeTabUnderline} />}
             </Pressable>
           );
         }}
       />
 
-      {categories.length > 0 && (
+          {false && categories.length > 0 && (
         <Text style={styles.categoryHint}>Catégories : {categories.join(" · ")}</Text>
       )}
 
-      {loading && (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
+          {loading && (
+        <View style={{ paddingHorizontal: spacing.lg }}>
+          <SkeletonEspaceCard />
+          <SkeletonEspaceCard />
+          <SkeletonEspaceCard />
+          <SkeletonEspaceCard />
         </View>
       )}
 
@@ -228,18 +232,26 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
   typeTabs: { paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.sm },
-  typeTab: {
+    typeTab: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    marginRight: 18,
+    paddingBottom: 8,
+    position: "relative",
+    height: 36,
   },
-  typeTabActive: { backgroundColor: colors.accent },
-  typeTabText: { fontSize: 12, color: colors.textSecondary, fontWeight: "600" },
-  typeTabTextActive: { color: colors.onAccent },
+  typeTabText: { fontSize: 13, color: colors.textSecondary, fontWeight: "500" },
+  typeTabTextActive: { color: colors.accent, fontWeight: "600" },
+  typeTabUnderline: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.accent,
+  },
   categoryHint: {
     fontSize: 11,
     color: colors.textMuted,

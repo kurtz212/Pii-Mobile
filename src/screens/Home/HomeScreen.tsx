@@ -199,15 +199,16 @@ export function HomeScreen() {
         keyExtractor={(item) => item}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryList}
-        renderItem={({ item }) => {
+               renderItem={({ item }) => {
           const active = activeCategory === item;
           return (
-            <Text
+            <Pressable
               onPress={() => setActiveCategory(active ? null : item)}
-              style={[styles.categoryChip, active && styles.categoryChipActive]}
+              style={styles.categoryTab}
             >
-              {item}
-            </Text>
+              <Text style={[styles.categoryTabText, active && styles.categoryTabTextActive]}>{item}</Text>
+              {active && <View style={styles.categoryTabUnderline} />}
+            </Pressable>
           );
         }}
       />
@@ -355,8 +356,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 20,
+    paddingVertical:-10,
     marginRight: 6,
     borderRadius: radius.pill,
     overflow: "hidden",
@@ -425,4 +426,23 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   orderButtonText: { fontSize: 13, fontWeight: "600", color: colors.onAccent },
+
+    categoryTab: {
+    marginRight: 18,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
+  categoryTabText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  categoryTabTextActive: { color: colors.accent, fontWeight: "600" },
+  categoryTabUnderline: {
+    marginTop: 4,
+    height: 2,
+    width: "100%",
+    borderRadius: 1,
+    backgroundColor: colors.accent,
+  },
 });
