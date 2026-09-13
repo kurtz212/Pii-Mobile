@@ -23,7 +23,7 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-naviga
 import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { ApiMessage, getMessages, MessageMetadata, sendMessage } from "../../services/messaging.service";
-import { getUserId, uploadImage, uploadVideo, uploadFile } from "../../services/api";
+import { getUserId, uploadImage, uploadVideo, uploadFile, getImageUrl } from "../../services/api";
 import { ApiRequestError } from "../../services/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Conversation">;
@@ -235,11 +235,11 @@ export function ConversationScreen() {
     const meta = item.metadata ?? parsedContent;
 
     if (item.type === "image" && meta?.url) {
-      return <Image source={{ uri: meta.url }} style={styles.attachmentMedia} />;
+         return <Image source={{ uri: getImageUrl(meta.url as string) ?? undefined }} style={styles.attachmentMedia} />;
     }
 
     if (item.type === "video" && meta?.url) {
-      return <MessageVideo uri={meta.url as string} />;
+         return <MessageVideo uri={getImageUrl(meta.url as string) ?? ""} />;
     }
 
     if (
@@ -274,7 +274,7 @@ export function ConversationScreen() {
     if (item.type === "file" && meta?.url) {
       const sizeKb = meta.fileSize ? Math.round((meta.fileSize as number) / 1024) : null;
       return (
-        <Pressable style={styles.attachmentCard} onPress={() => Linking.openURL(meta.url as string)}>
+           <Pressable style={styles.attachmentCard} onPress={() => Linking.openURL(getImageUrl(meta.url as string) ?? "")}>
           <Ionicons name="document-outline" size={22} color={colors.accent} />
           <View style={{ flex: 1 }}>
             <Text style={styles.attachmentCardText} numberOfLines={1}>

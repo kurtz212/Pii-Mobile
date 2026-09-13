@@ -9,6 +9,7 @@ import { colors, radius, spacing } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { ApiPublication, getFeed } from "../../services/publication.service";
 import { ApiRequestError, getImageUrl } from "../../services/api";
+import { SkeletonPublicationCard } from "@/components/Skeleton";
 import { getSubscriptionStatus, subscribeToEspace, unsubscribeFromEspace } from "../../services/espaces.service";
 import { getUserId } from "../../services/api";
 function PublicationVideo({ uri }: { uri: string }) {
@@ -211,9 +212,11 @@ export function HomeScreen() {
         }}
       />
 
-      {loading && (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
+         {loading && (
+        <View style={{ paddingHorizontal: spacing.lg }}>
+          <SkeletonPublicationCard />
+          <SkeletonPublicationCard />
+          <SkeletonPublicationCard />
         </View>
       )}
 
