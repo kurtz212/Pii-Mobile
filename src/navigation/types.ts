@@ -4,7 +4,6 @@ export type RootTabParamList = {
   Messagerie: undefined;
   Profil: undefined;
 };
-
 export type RootStackParamList = {
   Welcome: undefined;
   Tabs: undefined;
@@ -13,6 +12,7 @@ export type RootStackParamList = {
   Annuaire: undefined;
   MonAffiliation: undefined;
   VerificationIdentite: undefined;
+  VisionnerImage: { imageUrl: string };
   MesCommandes: undefined;
   InvitationsEquipe: undefined;
   NouveauMessage: undefined;

@@ -53,6 +53,7 @@ import { EditEspaceScreen } from "../screens/Espaces/EditEspaceScreen";
 import { LanguageSettingsScreen } from "../screens/Profile/LanguageSettingsScreen";
 import { SettingsScreen } from "../screens/Profile/SettingsScreen";
 import { PrivacyPolicyScreen } from "../screens/Profile/PrivacyPolicyScreen";
+import { ImageViewerScreen } from "../screens/Home/ImageViewerScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
@@ -96,6 +97,11 @@ export function RootNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="LivraisonGroupee" component={GroupedDeliveryScreen} />
+                <Stack.Screen
+          name="VisionnerImage"
+          component={ImageViewerScreen}
+          options={{ presentation: "fullScreenModal" }}
+        />
               <Stack.Screen name="Parametres" component={SettingsScreen} />
         <Stack.Screen name="PolitiqueConfidentialite" component={PrivacyPolicyScreen} />
               <Stack.Screen name="ModifierEspace" component={EditEspaceScreen} />

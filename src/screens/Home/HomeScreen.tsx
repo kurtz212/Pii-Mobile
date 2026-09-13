@@ -267,7 +267,9 @@ export function HomeScreen() {
                 </View>
 
                 {item.contentType === "image" && fullImageUrl && (
-                  <Image source={{ uri: fullImageUrl }} style={styles.mediaBox} />
+                          <Pressable onPress={() => navigation.navigate("VisionnerImage", { imageUrl: fullImageUrl })}>
+                    <Image source={{ uri: fullImageUrl }} style={styles.mediaBox} resizeMode="contain" />
+                  </Pressable>
                 )}
 
                 {item.contentType === "video" && fullVideoUrl && (
@@ -351,7 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   searchInput: { flex: 1, fontSize: 14, color: colors.textPrimary, padding: 0 },
-  categoryList: { paddingHorizontal: spacing.md, gap: 4, paddingBottom: spacing.md },
+   categoryList: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   categoryChip: {
     fontSize: 11,
     color: colors.textSecondary,
