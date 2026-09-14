@@ -16,6 +16,7 @@ import {
 import { ApiPublication, getFeed } from "../../services/publication.service";
 import { ApiBadgeInfo, getBadgeInfo } from "../../services/badge.service";
 import { ApiRequestError, getImageUrl, getUserId } from "../../services/api";
+import { SkeletonProfileHeader } from "@/components/Skeleton";
 import { initialsFromName, startConversation } from "../../services/messaging.service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProfilEspace">;
@@ -115,12 +116,10 @@ export function EspaceProfileScreen() {
     }
   }
 
-  if (loading) {
+   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
+        <SkeletonProfileHeader />
       </SafeAreaView>
     );
   }

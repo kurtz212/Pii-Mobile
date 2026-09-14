@@ -267,7 +267,7 @@ export function HomeScreen() {
                 </View>
 
                 {item.contentType === "image" && fullImageUrl && (
-                          <Pressable onPress={() => navigation.navigate("VisionnerImage", { imageUrl: fullImageUrl })}>
+                                <Pressable onPress={() => navigation.navigate("VisionnerImage", { imageUrl: fullImageUrl })}>
                     <Image source={{ uri: fullImageUrl }} style={styles.mediaBox} resizeMode="contain" />
                   </Pressable>
                 )}

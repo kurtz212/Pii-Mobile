@@ -13,6 +13,7 @@ import {
   initialsFromName,
 } from "../../services/messaging.service";
 import { getUserId } from "../../services/api";
+import { SkeletonConversationRow } from "@/components/Skeleton";
 import { ApiRequestError } from "../../services/api";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -85,10 +86,12 @@ export function MessagingListScreen() {
           placeholderTextColor={colors.textMuted}
         />
       </View>
-
       {loading && (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
+        <View>
+          <SkeletonConversationRow />
+          <SkeletonConversationRow />
+          <SkeletonConversationRow />
+          <SkeletonConversationRow />
         </View>
       )}
 
