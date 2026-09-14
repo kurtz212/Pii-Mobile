@@ -54,6 +54,7 @@ import { LanguageSettingsScreen } from "../screens/Profile/LanguageSettingsScree
 import { SettingsScreen } from "../screens/Profile/SettingsScreen";
 import { PrivacyPolicyScreen } from "../screens/Profile/PrivacyPolicyScreen";
 import { ImageViewerScreen } from "../screens/Home/ImageViewerScreen";
+import { TermsOfServiceScreen } from "../screens/Profile/TermsOfServiceScreen";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
@@ -97,6 +98,7 @@ export function RootNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="LivraisonGroupee" component={GroupedDeliveryScreen} />
+                <Stack.Screen name="ConditionsUtilisation" component={TermsOfServiceScreen} />
                 <Stack.Screen
           name="VisionnerImage"
           component={ImageViewerScreen}

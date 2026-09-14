@@ -67,4 +67,5 @@ export type RootStackParamList = {
   Tontines: undefined;
   CreerTontine: undefined;
   TontineDetail: { tontineId: string };
+    ConditionsUtilisation: undefined;
 };

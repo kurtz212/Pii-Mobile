@@ -136,7 +136,11 @@ export function SettingsScreen() {
           <Text style={styles.actionText}>Politique de confidentialité</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: "auto" }} />
         </Pressable>
-
+        <Pressable style={styles.actionButton} onPress={() => navigation.navigate("ConditionsUtilisation")}>
+          <Ionicons name="document-text-outline" size={20} color={colors.accent} />
+          <Text style={styles.actionText}>Conditions d'utilisation</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: "auto" }} />
+        </Pressable>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color={colors.danger} />
           <Text style={styles.logoutText}>Se déconnecter</Text>
